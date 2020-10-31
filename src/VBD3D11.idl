@@ -1,0 +1,2327 @@
+[
+  uuid(79c9e228-0732-4c1a-925d-9ef1a6cde1ff),
+  version(1.0),
+  helpstring("DirectX 11 for VB6 1.0 (wqweto@gmail.com)"),
+]
+
+library VBD3D11
+{
+    importlib("stdole2.tlb");
+    
+    interface ID3D11Device;
+    interface ID3D11Device1;
+    interface ID3D11DeviceChild;
+    interface ID3D11DeviceContext;
+    interface ID3D11DeviceContext1;
+    interface ID3D11Resource;
+    interface ID3D11Texture2D;
+    interface ID3D11Debug;
+    interface ID3D11InfoQueue;
+    interface ID3D11BlendState;
+    interface ID3D11BlendState1;
+    interface ID3D11RasterizerState;
+    interface ID3D11RasterizerState1;
+    interface ID3DDeviceContextState;
+    interface ID3D11View;
+    interface ID3D11RenderTargetView;
+    interface ID3D11CommandList;
+    
+    interface IDXGIObject;
+    interface IDXGIDeviceSubObject;
+    interface IDXGIAdapter;
+    interface IDXGIAdapter1;
+    interface IDXGIFactory;
+    interface IDXGIFactory1;
+    interface IDXGIFactory2;
+    interface IDXGISwapChain;
+    interface IDXGISwapChain1;
+    interface IDXGIOutput;
+    interface IDXGIOutput1;
+    interface IDXGIOutput2;
+    interface IDXGIOutput3;
+    interface IDXGIOutput4;
+    interface IDXGIOutput5;
+    interface IDXGISurface;
+    interface IDXGIOutputDuplication;
+    interface IDXGIResource;
+    interface IDXGIDevice;
+    
+    typedef long HANDLE;
+    typedef long HWND;
+    typedef long HMODULE;
+    typedef long HMONITOR;
+    typedef long UINT;
+    typedef long DWORD;
+    typedef void *REFGUID;
+    typedef void *REFIID;
+    typedef short WCHAR;
+    typedef long SIZE_T;
+    typedef long BOOL;
+    typedef unsigned char BYTE;
+    typedef unsigned char UINT8;
+    typedef LPSTR LPCSTR;
+    typedef LPWSTR LPCWSTR;
+    typedef [public] long VBHRESULT;
+    typedef [public] long VBPTR;
+    
+    typedef enum DXGI_FORMAT
+    {
+        DXGI_FORMAT_UNKNOWN	                    = 0,
+        DXGI_FORMAT_R32G32B32A32_TYPELESS       = 1,
+        DXGI_FORMAT_R32G32B32A32_FLOAT          = 2,
+        DXGI_FORMAT_R32G32B32A32_UINT           = 3,
+        DXGI_FORMAT_R32G32B32A32_SINT           = 4,
+        DXGI_FORMAT_R32G32B32_TYPELESS          = 5,
+        DXGI_FORMAT_R32G32B32_FLOAT             = 6,
+        DXGI_FORMAT_R32G32B32_UINT              = 7,
+        DXGI_FORMAT_R32G32B32_SINT              = 8,
+        DXGI_FORMAT_R16G16B16A16_TYPELESS       = 9,
+        DXGI_FORMAT_R16G16B16A16_FLOAT          = 10,
+        DXGI_FORMAT_R16G16B16A16_UNORM          = 11,
+        DXGI_FORMAT_R16G16B16A16_UINT           = 12,
+        DXGI_FORMAT_R16G16B16A16_SNORM          = 13,
+        DXGI_FORMAT_R16G16B16A16_SINT           = 14,
+        DXGI_FORMAT_R32G32_TYPELESS             = 15,
+        DXGI_FORMAT_R32G32_FLOAT                = 16,
+        DXGI_FORMAT_R32G32_UINT                 = 17,
+        DXGI_FORMAT_R32G32_SINT                 = 18,
+        DXGI_FORMAT_R32G8X24_TYPELESS           = 19,
+        DXGI_FORMAT_D32_FLOAT_S8X24_UINT        = 20,
+        DXGI_FORMAT_R32_FLOAT_X8X24_TYPELESS    = 21,
+        DXGI_FORMAT_X32_TYPELESS_G8X24_UINT     = 22,
+        DXGI_FORMAT_R10G10B10A2_TYPELESS        = 23,
+        DXGI_FORMAT_R10G10B10A2_UNORM           = 24,
+        DXGI_FORMAT_R10G10B10A2_UINT            = 25,
+        DXGI_FORMAT_R11G11B10_FLOAT             = 26,
+        DXGI_FORMAT_R8G8B8A8_TYPELESS           = 27,
+        DXGI_FORMAT_R8G8B8A8_UNORM              = 28,
+        DXGI_FORMAT_R8G8B8A8_UNORM_SRGB         = 29,
+        DXGI_FORMAT_R8G8B8A8_UINT               = 30,
+        DXGI_FORMAT_R8G8B8A8_SNORM              = 31,
+        DXGI_FORMAT_R8G8B8A8_SINT               = 32,
+        DXGI_FORMAT_R16G16_TYPELESS             = 33,
+        DXGI_FORMAT_R16G16_FLOAT                = 34,
+        DXGI_FORMAT_R16G16_UNORM                = 35,
+        DXGI_FORMAT_R16G16_UINT                 = 36,
+        DXGI_FORMAT_R16G16_SNORM                = 37,
+        DXGI_FORMAT_R16G16_SINT                 = 38,
+        DXGI_FORMAT_R32_TYPELESS                = 39,
+        DXGI_FORMAT_D32_FLOAT                   = 40,
+        DXGI_FORMAT_R32_FLOAT                   = 41,
+        DXGI_FORMAT_R32_UINT                    = 42,
+        DXGI_FORMAT_R32_SINT                    = 43,
+        DXGI_FORMAT_R24G8_TYPELESS              = 44,
+        DXGI_FORMAT_D24_UNORM_S8_UINT           = 45,
+        DXGI_FORMAT_R24_UNORM_X8_TYPELESS       = 46,
+        DXGI_FORMAT_X24_TYPELESS_G8_UINT        = 47,
+        DXGI_FORMAT_R8G8_TYPELESS               = 48,
+        DXGI_FORMAT_R8G8_UNORM                  = 49,
+        DXGI_FORMAT_R8G8_UINT                   = 50,
+        DXGI_FORMAT_R8G8_SNORM                  = 51,
+        DXGI_FORMAT_R8G8_SINT                   = 52,
+        DXGI_FORMAT_R16_TYPELESS                = 53,
+        DXGI_FORMAT_R16_FLOAT                   = 54,
+        DXGI_FORMAT_D16_UNORM                   = 55,
+        DXGI_FORMAT_R16_UNORM                   = 56,
+        DXGI_FORMAT_R16_UINT                    = 57,
+        DXGI_FORMAT_R16_SNORM                   = 58,
+        DXGI_FORMAT_R16_SINT                    = 59,
+        DXGI_FORMAT_R8_TYPELESS                 = 60,
+        DXGI_FORMAT_R8_UNORM                    = 61,
+        DXGI_FORMAT_R8_UINT                     = 62,
+        DXGI_FORMAT_R8_SNORM                    = 63,
+        DXGI_FORMAT_R8_SINT                     = 64,
+        DXGI_FORMAT_A8_UNORM                    = 65,
+        DXGI_FORMAT_R1_UNORM                    = 66,
+        DXGI_FORMAT_R9G9B9E5_SHAREDEXP          = 67,
+        DXGI_FORMAT_R8G8_B8G8_UNORM             = 68,
+        DXGI_FORMAT_G8R8_G8B8_UNORM             = 69,
+        DXGI_FORMAT_BC1_TYPELESS                = 70,
+        DXGI_FORMAT_BC1_UNORM                   = 71,
+        DXGI_FORMAT_BC1_UNORM_SRGB              = 72,
+        DXGI_FORMAT_BC2_TYPELESS                = 73,
+        DXGI_FORMAT_BC2_UNORM                   = 74,
+        DXGI_FORMAT_BC2_UNORM_SRGB              = 75,
+        DXGI_FORMAT_BC3_TYPELESS                = 76,
+        DXGI_FORMAT_BC3_UNORM                   = 77,
+        DXGI_FORMAT_BC3_UNORM_SRGB              = 78,
+        DXGI_FORMAT_BC4_TYPELESS                = 79,
+        DXGI_FORMAT_BC4_UNORM                   = 80,
+        DXGI_FORMAT_BC4_SNORM                   = 81,
+        DXGI_FORMAT_BC5_TYPELESS                = 82,
+        DXGI_FORMAT_BC5_UNORM                   = 83,
+        DXGI_FORMAT_BC5_SNORM                   = 84,
+        DXGI_FORMAT_B5G6R5_UNORM                = 85,
+        DXGI_FORMAT_B5G5R5A1_UNORM              = 86,
+        DXGI_FORMAT_B8G8R8A8_UNORM              = 87,
+        DXGI_FORMAT_B8G8R8X8_UNORM              = 88,
+        DXGI_FORMAT_R10G10B10_XR_BIAS_A2_UNORM  = 89,
+        DXGI_FORMAT_B8G8R8A8_TYPELESS           = 90,
+        DXGI_FORMAT_B8G8R8A8_UNORM_SRGB         = 91,
+        DXGI_FORMAT_B8G8R8X8_TYPELESS           = 92,
+        DXGI_FORMAT_B8G8R8X8_UNORM_SRGB         = 93,
+        DXGI_FORMAT_BC6H_TYPELESS               = 94,
+        DXGI_FORMAT_BC6H_UF16                   = 95,
+        DXGI_FORMAT_BC6H_SF16                   = 96,
+        DXGI_FORMAT_BC7_TYPELESS                = 97,
+        DXGI_FORMAT_BC7_UNORM                   = 98,
+        DXGI_FORMAT_BC7_UNORM_SRGB              = 99,
+        DXGI_FORMAT_AYUV                        = 100,
+        DXGI_FORMAT_Y410                        = 101,
+        DXGI_FORMAT_Y416                        = 102,
+        DXGI_FORMAT_NV12                        = 103,
+        DXGI_FORMAT_P010                        = 104,
+        DXGI_FORMAT_P016                        = 105,
+        DXGI_FORMAT_420_OPAQUE                  = 106,
+        DXGI_FORMAT_YUY2                        = 107,
+        DXGI_FORMAT_Y210                        = 108,
+        DXGI_FORMAT_Y216                        = 109,
+        DXGI_FORMAT_NV11                        = 110,
+        DXGI_FORMAT_AI44                        = 111,
+        DXGI_FORMAT_IA44                        = 112,
+        DXGI_FORMAT_P8                          = 113,
+        DXGI_FORMAT_A8P8                        = 114,
+        DXGI_FORMAT_B4G4R4A4_UNORM              = 115,
+
+        DXGI_FORMAT_P208                        = 130,
+        DXGI_FORMAT_V208                        = 131,
+        DXGI_FORMAT_V408                        = 132,
+
+        DXGI_FORMAT_FORCE_UINT                  = 0xffffffff
+    } DXGI_FORMAT;
+
+    typedef struct DXGI_SAMPLE_DESC
+    {
+        UINT Count;
+        UINT Quality;
+    } DXGI_SAMPLE_DESC;
+    
+    typedef struct LARGE_INTEGER
+    {
+        long    LowPart;
+        long    HighPart;
+    } LARGE_INTEGER;
+    
+    typedef LARGE_INTEGER UINT64;
+
+//**********************************************************************
+//
+//  D3D11
+//
+//**********************************************************************
+
+    typedef void D3D11_BUFFER_DESC;
+    typedef void D3D11_TEXTURE1D_DESC;
+    typedef void D3D11_TEXTURE3D_DESC;
+    typedef void D3D11_SHADER_RESOURCE_VIEW_DESC;
+    typedef void D3D11_UNORDERED_ACCESS_VIEW_DESC;
+    typedef void D3D11_DEPTH_STENCIL_VIEW_DESC;
+    typedef void D3D11_INPUT_ELEMENT_DESC;
+    typedef void D3D11_SO_DECLARATION_ENTRY;
+    typedef void D3D11_DEPTH_STENCIL_DESC;
+    typedef void D3D11_SAMPLER_DESC;
+    typedef void D3D11_QUERY_DESC;
+    typedef void D3D11_COUNTER_DESC;
+    typedef void D3D11_COUNTER_INFO;
+    typedef void D3D11_COUNTER_TYPE;
+    typedef IUnknown ID3D11Buffer;
+    typedef IUnknown ID3D11Texture1D;
+    typedef IUnknown ID3D11Texture3D;
+    typedef IUnknown ID3D11ShaderResourceView;
+    typedef IUnknown ID3D11PixelShader;
+    typedef IUnknown ID3D11ClassInstance;
+    typedef IUnknown ID3D11SamplerState;
+    typedef IUnknown ID3D11VertexShader;
+    typedef IUnknown ID3D11InputLayout;
+    typedef IUnknown ID3D11GeometryShader;
+    typedef IUnknown ID3D11Asynchronous;
+    typedef IUnknown ID3D11Predicate;
+    typedef IUnknown ID3D11DepthStencilView;
+    typedef IUnknown ID3D11UnorderedAccessView;
+    typedef IUnknown ID3D11DepthStencilState;
+    typedef IUnknown ID3D11ClassLinkage;
+    typedef IUnknown ID3D11HullShader;
+    typedef IUnknown ID3D11DomainShader;
+    typedef IUnknown ID3D11ComputeShader;
+    typedef IUnknown ID3D11Query;
+    typedef IUnknown ID3D11Counter;
+
+    typedef enum D3D_DRIVER_TYPE
+    {
+        D3D_DRIVER_TYPE_UNKNOWN,
+        D3D_DRIVER_TYPE_HARDWARE,
+        D3D_DRIVER_TYPE_REFERENCE,
+        D3D_DRIVER_TYPE_NULL,
+        D3D_DRIVER_TYPE_SOFTWARE,
+        D3D_DRIVER_TYPE_WARP,
+    } D3D_DRIVER_TYPE;
+    
+    typedef enum D3D_FEATURE_LEVEL
+    {
+        D3D_FEATURE_LEVEL_9_1 = 0x9100,
+        D3D_FEATURE_LEVEL_9_2 = 0x9200,
+        D3D_FEATURE_LEVEL_9_3 = 0x9300,
+        D3D_FEATURE_LEVEL_10_0 = 0xa000,
+        D3D_FEATURE_LEVEL_10_1 = 0xa100,
+        D3D_FEATURE_LEVEL_11_0 = 0xb000,
+        D3D_FEATURE_LEVEL_11_1 = 0xb100,
+        D3D_FEATURE_LEVEL_12_0 = 0xc000,
+        D3D_FEATURE_LEVEL_12_1 = 0xc100
+    } D3D_FEATURE_LEVEL;
+    
+    typedef enum D3D11_RESOURCE_DIMENSION
+    {
+        D3D11_RESOURCE_DIMENSION_UNKNOWN = 0,
+        D3D11_RESOURCE_DIMENSION_BUFFER = 1,
+        D3D11_RESOURCE_DIMENSION_TEXTURE1D = 2,
+        D3D11_RESOURCE_DIMENSION_TEXTURE2D = 3,
+        D3D11_RESOURCE_DIMENSION_TEXTURE3D = 4,
+    } D3D11_RESOURCE_DIMENSION;
+    
+    typedef enum D3D11_USAGE
+    {
+        D3D11_USAGE_DEFAULT = 0,
+        D3D11_USAGE_IMMUTABLE = 1,
+        D3D11_USAGE_DYNAMIC = 2,
+        D3D11_USAGE_STAGING = 3,
+    } D3D11_USAGE;
+    
+    typedef enum D3D11_BIND_FLAG
+    {
+        D3D11_BIND_VERTEX_BUFFER = 0x00000001,
+        D3D11_BIND_INDEX_BUFFER = 0x00000002,
+        D3D11_BIND_CONSTANT_BUFFER = 0x00000004,
+        D3D11_BIND_SHADER_RESOURCE = 0x00000008,
+        D3D11_BIND_STREAM_OUTPUT = 0x00000010,
+        D3D11_BIND_RENDER_TARGET = 0x00000020,
+        D3D11_BIND_DEPTH_STENCIL = 0x00000040,
+        D3D11_BIND_UNORDERED_ACCESS = 0x00000080,
+        D3D11_BIND_DECODER = 0x00000200,
+        D3D11_BIND_VIDEO_ENCODER = 0x00000400,
+    } D3D11_BIND_FLAG;
+    
+    typedef enum D3D11_CPU_ACCESS_FLAG
+    {
+        D3D11_CPU_ACCESS_WRITE = 0x00010000,
+        D3D11_CPU_ACCESS_READ = 0x00020000,
+    } D3D11_CPU_ACCESS_FLAG;
+    
+    typedef enum D3D_PRIMITIVE_TOPOLOGY
+    {
+        D3D_PRIMITIVE_TOPOLOGY_UNDEFINED = 0,
+        D3D_PRIMITIVE_TOPOLOGY_POINTLIST = 1,
+        D3D_PRIMITIVE_TOPOLOGY_LINELIST = 2,
+        D3D_PRIMITIVE_TOPOLOGY_LINESTRIP = 3,
+        D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST = 4,
+        D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP = 5,
+        // 6 is reserved for legacy triangle fans
+        // Adjacency values should be equal to (0x8 & non-adjacency):
+        D3D_PRIMITIVE_TOPOLOGY_LINELIST_ADJ = 10,
+        D3D_PRIMITIVE_TOPOLOGY_LINESTRIP_ADJ = 11,
+        D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST_ADJ = 12,
+        D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP_ADJ = 13,
+        D3D_PRIMITIVE_TOPOLOGY_1_CONTROL_POINT_PATCHLIST = 33,
+        D3D_PRIMITIVE_TOPOLOGY_2_CONTROL_POINT_PATCHLIST = 34,
+        D3D_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST = 35,
+        D3D_PRIMITIVE_TOPOLOGY_4_CONTROL_POINT_PATCHLIST = 36,
+        D3D_PRIMITIVE_TOPOLOGY_5_CONTROL_POINT_PATCHLIST = 37,
+        D3D_PRIMITIVE_TOPOLOGY_6_CONTROL_POINT_PATCHLIST = 38,
+        D3D_PRIMITIVE_TOPOLOGY_7_CONTROL_POINT_PATCHLIST = 39,
+        D3D_PRIMITIVE_TOPOLOGY_8_CONTROL_POINT_PATCHLIST = 40,
+        D3D_PRIMITIVE_TOPOLOGY_9_CONTROL_POINT_PATCHLIST = 41,
+        D3D_PRIMITIVE_TOPOLOGY_10_CONTROL_POINT_PATCHLIST = 42,
+        D3D_PRIMITIVE_TOPOLOGY_11_CONTROL_POINT_PATCHLIST = 43,
+        D3D_PRIMITIVE_TOPOLOGY_12_CONTROL_POINT_PATCHLIST = 44,
+        D3D_PRIMITIVE_TOPOLOGY_13_CONTROL_POINT_PATCHLIST = 45,
+        D3D_PRIMITIVE_TOPOLOGY_14_CONTROL_POINT_PATCHLIST = 46,
+        D3D_PRIMITIVE_TOPOLOGY_15_CONTROL_POINT_PATCHLIST = 47,
+        D3D_PRIMITIVE_TOPOLOGY_16_CONTROL_POINT_PATCHLIST = 48,
+        D3D_PRIMITIVE_TOPOLOGY_17_CONTROL_POINT_PATCHLIST = 49,
+        D3D_PRIMITIVE_TOPOLOGY_18_CONTROL_POINT_PATCHLIST = 50,
+        D3D_PRIMITIVE_TOPOLOGY_19_CONTROL_POINT_PATCHLIST = 51,
+        D3D_PRIMITIVE_TOPOLOGY_20_CONTROL_POINT_PATCHLIST = 52,
+        D3D_PRIMITIVE_TOPOLOGY_21_CONTROL_POINT_PATCHLIST = 53,
+        D3D_PRIMITIVE_TOPOLOGY_22_CONTROL_POINT_PATCHLIST = 54,
+        D3D_PRIMITIVE_TOPOLOGY_23_CONTROL_POINT_PATCHLIST = 55,
+        D3D_PRIMITIVE_TOPOLOGY_24_CONTROL_POINT_PATCHLIST = 56,
+        D3D_PRIMITIVE_TOPOLOGY_25_CONTROL_POINT_PATCHLIST = 57,
+        D3D_PRIMITIVE_TOPOLOGY_26_CONTROL_POINT_PATCHLIST = 58,
+        D3D_PRIMITIVE_TOPOLOGY_27_CONTROL_POINT_PATCHLIST = 59,
+        D3D_PRIMITIVE_TOPOLOGY_28_CONTROL_POINT_PATCHLIST = 60,
+        D3D_PRIMITIVE_TOPOLOGY_29_CONTROL_POINT_PATCHLIST = 61,
+        D3D_PRIMITIVE_TOPOLOGY_30_CONTROL_POINT_PATCHLIST = 62,
+        D3D_PRIMITIVE_TOPOLOGY_31_CONTROL_POINT_PATCHLIST = 63,
+        D3D_PRIMITIVE_TOPOLOGY_32_CONTROL_POINT_PATCHLIST = 64,
+    } D3D_PRIMITIVE_TOPOLOGY;
+    
+    typedef D3D_PRIMITIVE_TOPOLOGY D3D11_PRIMITIVE_TOPOLOGY;
+    
+    typedef enum D3D11_MAP // for calling ID3D11Resource::Map()
+    {
+        D3D11_MAP_READ = 1,
+        D3D11_MAP_WRITE = 2,
+        D3D11_MAP_READ_WRITE = 3,
+        D3D11_MAP_WRITE_DISCARD = 4,
+        D3D11_MAP_WRITE_NO_OVERWRITE = 5,
+    } D3D11_MAP;
+    
+    typedef enum D3D11_RTV_DIMENSION
+    {
+        D3D11_RTV_DIMENSION_UNKNOWN = 0,
+        D3D11_RTV_DIMENSION_BUFFER = 1,
+        D3D11_RTV_DIMENSION_TEXTURE1D = 2,
+        D3D11_RTV_DIMENSION_TEXTURE1DARRAY = 3,
+        D3D11_RTV_DIMENSION_TEXTURE2D = 4,
+        D3D11_RTV_DIMENSION_TEXTURE2DARRAY = 5,
+        D3D11_RTV_DIMENSION_TEXTURE2DMS = 6,
+        D3D11_RTV_DIMENSION_TEXTURE2DMSARRAY = 7,
+        D3D11_RTV_DIMENSION_TEXTURE3D = 8,
+    } D3D11_RTV_DIMENSION;
+    
+    typedef enum D3D11_FEATURE
+    {
+        D3D11_FEATURE_THREADING,
+        D3D11_FEATURE_DOUBLES,
+        D3D11_FEATURE_FORMAT_SUPPORT,
+        D3D11_FEATURE_FORMAT_SUPPORT2,
+        D3D11_FEATURE_D3D10_X_HARDWARE_OPTIONS,
+        D3D11_FEATURE_D3D11_OPTIONS,
+        D3D11_FEATURE_ARCHITECTURE_INFO,
+        D3D11_FEATURE_D3D9_OPTIONS,
+        D3D11_FEATURE_SHADER_MIN_PRECISION_SUPPORT,
+        D3D11_FEATURE_D3D9_SHADOW_SUPPORT,
+        D3D11_FEATURE_D3D11_OPTIONS1,
+        D3D11_FEATURE_D3D9_SIMPLE_INSTANCING_SUPPORT,
+        D3D11_FEATURE_MARKER_SUPPORT,
+        D3D11_FEATURE_D3D9_OPTIONS1,
+        D3D11_FEATURE_D3D11_OPTIONS2,
+        D3D11_FEATURE_D3D11_OPTIONS3,
+        D3D11_FEATURE_GPU_VIRTUAL_ADDRESS_SUPPORT,
+        D3D11_FEATURE_D3D11_OPTIONS4,
+        D3D11_FEATURE_SHADER_CACHE,
+        D3D11_FEATURE_D3D11_OPTIONS5,
+    } D3D11_FEATURE;
+    
+    typedef enum D3D11_MAP_FLAG
+    {
+        D3D11_MAP_FLAG_DO_NOT_WAIT = 0x00100000,
+    } D3D11_MAP_FLAG;
+    
+    typedef enum D3D11_RLDO_FLAGS
+    {
+        D3D11_RLDO_SUMMARY = 0x1,
+        D3D11_RLDO_DETAIL = 0x2,
+        D3D11_RLDO_IGNORE_INTERNAL = 0x4,
+
+    } D3D11_RLDO_FLAGS;
+    
+    typedef enum D3D11_MESSAGE_CATEGORY {
+        D3D11_MESSAGE_CATEGORY_APPLICATION_DEFINED,
+        D3D11_MESSAGE_CATEGORY_MISCELLANEOUS,
+        D3D11_MESSAGE_CATEGORY_INITIALIZATION,
+        D3D11_MESSAGE_CATEGORY_CLEANUP,
+        D3D11_MESSAGE_CATEGORY_COMPILATION,
+        D3D11_MESSAGE_CATEGORY_STATE_CREATION,
+        D3D11_MESSAGE_CATEGORY_STATE_SETTING,
+        D3D11_MESSAGE_CATEGORY_STATE_GETTING,
+        D3D11_MESSAGE_CATEGORY_RESOURCE_MANIPULATION,
+        D3D11_MESSAGE_CATEGORY_EXECUTION,
+        D3D11_MESSAGE_CATEGORY_SHADER,
+    } D3D11_MESSAGE_CATEGORY;
+
+    typedef enum D3D11_MESSAGE_SEVERITY {
+        D3D11_MESSAGE_SEVERITY_CORRUPTION,
+        D3D11_MESSAGE_SEVERITY_ERROR,
+        D3D11_MESSAGE_SEVERITY_WARNING,
+        D3D11_MESSAGE_SEVERITY_INFO,
+        D3D11_MESSAGE_SEVERITY_MESSAGE
+    } D3D11_MESSAGE_SEVERITY;
+    
+    typedef enum D3D11_MESSAGE_ID {
+        D3D11_MESSAGE_ID_UNKNOWN = 0,
+    } D3D11_MESSAGE_ID;
+    
+    typedef enum D3D11_BLEND
+    {
+        D3D11_BLEND_ZERO = 1,
+        D3D11_BLEND_ONE = 2,
+        D3D11_BLEND_SRC_COLOR = 3, // PS output oN.rgb (N is current RT being blended)
+        D3D11_BLEND_INV_SRC_COLOR = 4, // 1.0f - PS output oN.rgb
+        D3D11_BLEND_SRC_ALPHA = 5, // PS output oN.a
+        D3D11_BLEND_INV_SRC_ALPHA = 6, // 1.0f - PS output oN.a
+        D3D11_BLEND_DEST_ALPHA = 7, // RT(N).a (N is current RT being blended)
+        D3D11_BLEND_INV_DEST_ALPHA = 8, // 1.0f - RT(N).a
+        D3D11_BLEND_DEST_COLOR = 9, // RT(N).rgb
+        D3D11_BLEND_INV_DEST_COLOR = 10,// 1.0f - RT(N).rgb
+        D3D11_BLEND_SRC_ALPHA_SAT = 11,// (f,f,f,1), f = min(1 - RT(N).a, oN.a)
+        // 12 reserved (was BOTHSRCALPHA)
+        // 13 reserved (was BOTHSRCALPHA)
+        D3D11_BLEND_BLEND_FACTOR = 14,
+        D3D11_BLEND_INV_BLEND_FACTOR = 15,
+        D3D11_BLEND_SRC1_COLOR = 16, // PS output o1.rgb
+        D3D11_BLEND_INV_SRC1_COLOR = 17, // 1.0f - PS output o1.rgb
+        D3D11_BLEND_SRC1_ALPHA = 18, // PS output o1.a
+        D3D11_BLEND_INV_SRC1_ALPHA = 19, // 1.0f - PS output o1.a
+    } D3D11_BLEND;
+
+    // Keep BLENDOP values in sync with earlier DX versions (HW consumes values directly).
+    typedef enum D3D11_BLEND_OP
+    {
+        D3D11_BLEND_OP_ADD = 1,
+        D3D11_BLEND_OP_SUBTRACT = 2,
+        D3D11_BLEND_OP_REV_SUBTRACT = 3,
+        D3D11_BLEND_OP_MIN = 4, // min semantics are like min shader instruction
+        D3D11_BLEND_OP_MAX = 5, // max semantics are like max shader instruction
+    } D3D11_BLEND_OP;
+    
+    typedef enum D3D11_LOGIC_OP        // Operation: 
+    {                                  // (s == PS output, d = RTV contents)
+        D3D11_LOGIC_OP_CLEAR = 0,      // 0
+        D3D11_LOGIC_OP_SET,            // 1
+        D3D11_LOGIC_OP_COPY,           // s
+        D3D11_LOGIC_OP_COPY_INVERTED,  // ~s
+        D3D11_LOGIC_OP_NOOP,           // d
+        D3D11_LOGIC_OP_INVERT,         // ~d
+        D3D11_LOGIC_OP_AND,            // s & d
+        D3D11_LOGIC_OP_NAND,           // ~(s & d)
+        D3D11_LOGIC_OP_OR,             // s | d
+        D3D11_LOGIC_OP_NOR,            // ~(s | d)
+        D3D11_LOGIC_OP_XOR,            // s ^ d
+        D3D11_LOGIC_OP_EQUIV,          // ~(s ^ d)
+        D3D11_LOGIC_OP_AND_REVERSE,    // s & ~d
+        D3D11_LOGIC_OP_AND_INVERTED,   // ~s & d
+        D3D11_LOGIC_OP_OR_REVERSE,     // s | ~d
+        D3D11_LOGIC_OP_OR_INVERTED,    // ~s | d
+    } D3D11_LOGIC_OP;
+    
+    typedef enum D3D11_FILL_MODE
+    {
+        // 1 was POINT in D3D, unused in D3D11
+        D3D11_FILL_WIREFRAME = 2,
+        D3D11_FILL_SOLID = 3
+    } D3D11_FILL_MODE;
+    
+    // Keep CULL_MODE values in sync with earlier DX versions (HW consumes values directly).
+    typedef enum D3D11_CULL_MODE
+    {
+        D3D11_CULL_NONE = 1,
+        D3D11_CULL_FRONT = 2,
+        D3D11_CULL_BACK = 3
+    } D3D11_CULL_MODE;
+    
+    typedef enum D3D11_DEVICE_CONTEXT_TYPE
+    {
+        D3D11_DEVICE_CONTEXT_IMMEDIATE,
+        D3D11_DEVICE_CONTEXT_DEFERRED,
+    } D3D11_DEVICE_CONTEXT_TYPE;
+
+    typedef struct D3D11_RECT {
+        long    Left;
+        long    Top;
+        long    Right;
+        long    Bottom;
+    } D3D11_RECT;
+
+    typedef D3D11_RECT RECT;
+    
+    typedef struct D3D11_POINT {
+        long    X;
+        long    Y;
+    } D3D11_POINT;
+    
+    typedef D3D11_POINT POINT;
+    
+    typedef struct D3D11_BOX
+    {
+        UINT    Left;
+        UINT    Top;
+        UINT    Front;
+        UINT    Right;
+        UINT    Bottom;
+        UINT    Back;
+    } D3D11_BOX;
+    
+    typedef struct D3DCOLORVALUE {
+        float   R;
+        float   G;
+        float   B;
+        float   A;
+    } D3DCOLORVALUE;
+
+    typedef struct D3D11_SUBRESOURCE_DATA
+    {
+        VBPTR   pSysMemPtr;
+        UINT SysMemPitch;
+        UINT SysMemSlicePitch;
+    } D3D11_SUBRESOURCE_DATA;
+    
+    typedef struct D3D11_TEXTURE2D_DESC
+    {
+        UINT             Width;
+        UINT             Height;
+        UINT             MipLevels;
+        UINT             ArraySize;
+        DXGI_FORMAT      Format;
+        DXGI_SAMPLE_DESC SampleDesc;
+        D3D11_USAGE      Usage;
+        D3D11_BIND_FLAG  BindFlags;
+        D3D11_CPU_ACCESS_FLAG CPUAccessFlags;    
+        UINT             MiscFlags;
+    } D3D11_TEXTURE2D_DESC;
+    
+    typedef struct D3D11_MAPPED_SUBRESOURCE
+    {
+        VBPTR   pDataPtr;
+        UINT    RowPitch;
+        UINT    DepthPitch;
+    } D3D11_MAPPED_SUBRESOURCE;
+    
+    typedef struct D3D11_VIEWPORT
+    {
+        FLOAT TopLeftX;
+        FLOAT TopLeftY;
+        FLOAT Width;
+        FLOAT Height;
+        FLOAT MinDepth;
+        FLOAT MaxDepth;
+    } D3D11_VIEWPORT;
+    
+    typedef struct D3D11_MESSAGE
+    {
+        D3D11_MESSAGE_CATEGORY  Category;
+        D3D11_MESSAGE_SEVERITY  Severity;
+        D3D11_MESSAGE_ID        ID;
+        LPCSTR                  pDescription;
+        SIZE_T                  DescriptionByteLength;
+    } D3D11_MESSAGE;
+    
+    typedef struct D3D11_INFO_QUEUE_FILTER_DESC
+    {
+        UINT                    NumCategories;
+        D3D11_MESSAGE_CATEGORY *pCategoryList;
+        UINT                    NumSeverities;
+        D3D11_MESSAGE_SEVERITY *pSeverityList;
+        UINT                    NumIDs;
+        D3D11_MESSAGE_ID   *    pIDList;
+    } D3D11_INFO_QUEUE_FILTER_DESC;
+    
+    typedef struct D3D11_INFO_QUEUE_FILTER
+    {
+        D3D11_INFO_QUEUE_FILTER_DESC AllowList;
+        D3D11_INFO_QUEUE_FILTER_DESC DenyList;
+    } D3D11_INFO_QUEUE_FILTER;
+    
+    typedef struct D3D11_RENDER_TARGET_BLEND_DESC
+    {
+        BOOL BlendEnable;
+        D3D11_BLEND SrcBlend;
+        D3D11_BLEND DestBlend;
+        D3D11_BLEND_OP BlendOp;
+        D3D11_BLEND SrcBlendAlpha;
+        D3D11_BLEND DestBlendAlpha;
+        D3D11_BLEND_OP BlendOpAlpha;
+        UINT8 RenderTargetWriteMask; // D3D11_COLOR_WRITE_ENABLE
+    } D3D11_RENDER_TARGET_BLEND_DESC;
+
+    typedef struct D3D11_BLEND_DESC
+    {
+        BOOL AlphaToCoverageEnable; // relevant to multisample antialiasing only
+        BOOL IndependentBlendEnable; // if FALSE, then replicate the first entry in RenderTarget array to other entries
+        D3D11_RENDER_TARGET_BLEND_DESC RenderTarget[8]; // D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT = 8
+    } D3D11_BLEND_DESC;
+
+    typedef struct D3D11_RENDER_TARGET_BLEND_DESC1
+    {
+        BOOL BlendEnable;
+        BOOL LogicOpEnable; // LogicOpEnable and BlendEnable can't both be true
+        D3D11_BLEND SrcBlend;
+        D3D11_BLEND DestBlend;
+        D3D11_BLEND_OP BlendOp;
+        D3D11_BLEND SrcBlendAlpha;
+        D3D11_BLEND DestBlendAlpha;
+        D3D11_BLEND_OP BlendOpAlpha;
+        D3D11_LOGIC_OP LogicOp; // applies to RGBA
+        UINT8 RenderTargetWriteMask; // D3D11_COLOR_WRITE_ENABLE
+    } D3D11_RENDER_TARGET_BLEND_DESC1;
+
+    typedef struct D3D11_BLEND_DESC1
+    {
+        BOOL AlphaToCoverageEnable; // relevant to multisample antialiasing only
+        BOOL IndependentBlendEnable; // if FALSE, then replicate the first entry in RenderTarget array to other entries
+        D3D11_RENDER_TARGET_BLEND_DESC1 RenderTarget[8]; // D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT = 8
+    } D3D11_BLEND_DESC1;
+
+    typedef struct D3D11_RASTERIZER_DESC
+    {
+        D3D11_FILL_MODE FillMode;
+        D3D11_CULL_MODE CullMode;
+        BOOL FrontCounterClockwise;
+        INT DepthBias;
+        FLOAT DepthBiasClamp;
+        FLOAT SlopeScaledDepthBias;
+        BOOL DepthClipEnable;
+        BOOL ScissorEnable;
+        BOOL MultisampleEnable;
+        BOOL AntialiasedLineEnable;
+    } D3D11_RASTERIZER_DESC;
+    
+    typedef struct D3D11_RASTERIZER_DESC1
+    {
+        D3D11_FILL_MODE FillMode;
+        D3D11_CULL_MODE CullMode;
+        BOOL FrontCounterClockwise;
+        INT DepthBias;
+        FLOAT DepthBiasClamp;
+        FLOAT SlopeScaledDepthBias;
+        BOOL DepthClipEnable;
+        BOOL ScissorEnable;
+        BOOL MultisampleEnable;
+        BOOL AntialiasedLineEnable;
+        UINT ForcedSampleCount;  
+    } D3D11_RASTERIZER_DESC1;
+    
+    
+    typedef struct D3D11_TEX3D_RTV
+    {
+        UINT MipSlice;
+        UINT FirstWSlice;
+        UINT WSize;
+    } D3D11_TEX3D_RTV;
+
+    typedef struct D3D11_RENDER_TARGET_VIEW_DESC
+    {
+        DXGI_FORMAT Format;
+        D3D11_RTV_DIMENSION ViewDimension;
+
+        //union
+        //{
+        //    D3D11_BUFFER_RTV Buffer;
+        //    D3D11_TEX1D_RTV Texture1D;
+        //    D3D11_TEX1D_ARRAY_RTV Texture1DArray;
+        //    D3D11_TEX2D_RTV Texture2D;
+        //    D3D11_TEX2D_ARRAY_RTV Texture2DArray;
+        //    D3D11_TEX2DMS_RTV Texture2DMS;
+        //    D3D11_TEX2DMS_ARRAY_RTV Texture2DMSArray;
+            D3D11_TEX3D_RTV Texture3D;
+        //};
+    } D3D11_RENDER_TARGET_VIEW_DESC;
+
+    [odl, uuid(db6f6ddb-ac77-4e88-8253-819df9bbf140)]
+    interface ID3D11Device : IUnknown {
+        HRESULT CreateBuffer(
+            [in, out] D3D11_BUFFER_DESC *pDesc,
+            [in, defaultvalue(0)] VBPTR pInitialData,
+            [out, retval] ID3D11Buffer **ppBuffer);
+        HRESULT CreateTexture1D(
+            [in, out] D3D11_TEXTURE1D_DESC *pDesc,
+            [in, defaultvalue(0)] VBPTR pInitialData,
+            [out, retval] ID3D11Texture1D **ppTexture1D);
+        HRESULT CreateTexture2D(
+            [in, out] D3D11_TEXTURE2D_DESC *pDesc,
+            [in, defaultvalue(0)] VBPTR pInitialData,
+            [out, retval] ID3D11Texture2D **ppTexture2D);
+        HRESULT CreateTexture3D(
+            [in, out] D3D11_TEXTURE3D_DESC *pDesc,
+            [in, defaultvalue(0)] VBPTR pInitialData,
+            [out, retval] ID3D11Texture3D **ppTexture3D);
+        HRESULT CreateShaderResourceView(
+            [in] ID3D11Resource *pResource,
+            [in, out] D3D11_SHADER_RESOURCE_VIEW_DESC *pDesc,
+            [out, retval] ID3D11ShaderResourceView **ppSRView);
+        HRESULT CreateUnorderedAccessView(
+            [in] ID3D11Resource *pResource,
+            [in, out] D3D11_UNORDERED_ACCESS_VIEW_DESC *pDesc,
+            [out, retval] ID3D11UnorderedAccessView **ppUAView);
+        HRESULT CreateRenderTargetView(
+            [in] ID3D11Resource *pResource,
+            [in] void *pDesc,
+            [out, retval] ID3D11RenderTargetView **ppRTView);
+        HRESULT CreateDepthStencilView(
+            [in] ID3D11Resource *pResource,
+            [in, out] D3D11_DEPTH_STENCIL_VIEW_DESC *pDesc,
+            [out, retval] ID3D11DepthStencilView **ppDepthStencilView);
+        HRESULT CreateInputLayout(
+            [in, out] D3D11_INPUT_ELEMENT_DESC *pInputElementDescs,
+            [in] UINT NumElements,
+            [in, out] void *pShaderBytecodeWithInputSignature,
+            [in] SIZE_T BytecodeLength,
+            [out, retval] ID3D11InputLayout **ppInputLayout);
+        HRESULT CreateVertexShader(
+            [in, out] void *pShaderBytecode,
+            [in] SIZE_T BytecodeLength,
+            [in] ID3D11ClassLinkage *pClassLinkage,
+            [out, retval] ID3D11VertexShader **ppVertexShader);
+        HRESULT CreateGeometryShader(
+            [in, out] void *pShaderBytecode,
+            [in] SIZE_T BytecodeLength,
+            [in] ID3D11ClassLinkage *pClassLinkage,
+            [out, retval] ID3D11GeometryShader **ppGeometryShader);
+        HRESULT CreateGeometryShaderWithStreamOutput(
+            [in, out] void *pShaderBytecode,
+            [in] SIZE_T BytecodeLength,
+            [in, out] D3D11_SO_DECLARATION_ENTRY *pSODeclaration,
+            [in] UINT NumEntries,
+            [in, out] UINT *pBufferStrides,
+            [in] UINT NumStrides,
+            [in] UINT RasterizedStream,
+            [in] ID3D11ClassLinkage *pClassLinkage,
+            [out, retval] ID3D11GeometryShader **ppGeometryShader);
+        HRESULT CreatePixelShader(
+            [in, out] void *pShaderBytecode,
+            [in] SIZE_T BytecodeLength,
+            [in] ID3D11ClassLinkage *pClassLinkage,
+            [out, retval] ID3D11PixelShader **ppPixelShader);
+        HRESULT CreateHullShader(
+            [in] void *pShaderBytecode,
+            [in] SIZE_T BytecodeLength,
+            [in] ID3D11ClassLinkage *pClassLinkage,
+            [out, retval] ID3D11HullShader **ppHullShader);
+        HRESULT CreateDomainShader(
+            [in] void *pShaderBytecode,
+            [in] SIZE_T BytecodeLength,
+            [in] ID3D11ClassLinkage *pClassLinkage,
+            [out, retval] ID3D11DomainShader **ppDomainShader);
+        HRESULT CreateComputeShader(
+            [in] void *pShaderBytecode,
+            [in] SIZE_T BytecodeLength,
+            [in] ID3D11ClassLinkage *pClassLinkage,
+            [out, retval] ID3D11ComputeShader **ppComputeShader);
+        HRESULT CreateClassLinkage(
+            [out, retval] ID3D11ClassLinkage **ppLinkage);
+        HRESULT CreateBlendState(
+            [in] D3D11_BLEND_DESC *pBlendStateDesc,
+            [out, retval] ID3D11BlendState **ppBlendState);
+        HRESULT CreateDepthStencilState(
+            [in] D3D11_DEPTH_STENCIL_DESC *pDepthStencilDesc,
+            [out, retval] ID3D11DepthStencilState **ppDepthStencilState);
+        HRESULT CreateRasterizerState(
+            [in] D3D11_RASTERIZER_DESC *pRasterizerDesc,
+            [out, retval] ID3D11RasterizerState **ppRasterizerState);
+        HRESULT CreateSamplerState(
+            [in] D3D11_SAMPLER_DESC *pSamplerDesc,
+            [out, retval] ID3D11SamplerState **ppSamplerState);
+        HRESULT CreateQuery(
+            [in] D3D11_QUERY_DESC *pQueryDesc,
+            [out, retval] ID3D11Query **ppQuery);
+        HRESULT CreatePredicate(
+            [in] D3D11_QUERY_DESC *pPredicateDesc,
+            [out, retval] ID3D11Predicate **ppPredicate);
+        HRESULT CreateCounter(
+            [in] D3D11_COUNTER_DESC *pCounterDesc,
+            [out, retval] ID3D11Counter **ppCounter);
+        HRESULT CreateDeferredContext(
+            [in] UINT ContextFlags, // Reserved parameter; must be 0
+            [out, retval] ID3D11DeviceContext **ppDeferredContext);
+        HRESULT OpenSharedResource(
+            [in] HANDLE hResource,
+            [in] REFIID ReturnedInterface,
+            [out, retval] VBPTR *ppResource);
+
+        // Check*
+        HRESULT CheckFormatSupport(
+            [in] DXGI_FORMAT Format,
+            [out, retval] UINT *pFormatSupport);
+        HRESULT CheckMultisampleQualityLevels(
+            [in] DXGI_FORMAT Format,
+            [in] UINT        SampleCount,
+            [out, retval] UINT *pNumQualityLevels);
+        void CheckCounterInfo(
+            [in, out] D3D11_COUNTER_INFO *pCounterInfo);
+        HRESULT CheckCounter(
+            [in] D3D11_COUNTER_DESC *pDesc,
+            [in, out] D3D11_COUNTER_TYPE *pType,
+            [in, out] UINT *pActiveCounters,
+            [in, out] LPSTR szName,
+            [in, out] UINT *pNameLength,
+            [in, out] LPSTR szUnits,
+            [in, out] UINT *pUnitsLength,
+            [in, out] LPSTR szDescription,
+            [in, out] UINT *pDescriptionLength);
+        HRESULT CheckFeatureSupport(
+            [in] D3D11_FEATURE Feature,
+            [in, out] void *pFeatureSupportData,
+            [in] UINT FeatureSupportDataSize);
+
+        HRESULT GetPrivateData(
+            [in] REFGUID guid,
+            [in, out] UINT *pDataSize,
+            [in, out] void *pData);
+        HRESULT SetPrivateData(
+            [in] REFGUID guid,
+            [in] UINT DataSize,
+            [in, out] void *pData);
+        HRESULT SetPrivateDataInterface(
+            [in] REFGUID guid,
+            [in] IUnknown *pData);
+
+        D3D_FEATURE_LEVEL GetFeatureLevel();
+        UINT GetCreationFlags();
+        UINT GetDeviceRemovedReason();
+        void GetImmediateContext(
+            [in, out] ID3D11DeviceContext **ppImmediateContext);
+        HRESULT SetExceptionMode(
+            [in] UINT RaiseFlags);
+        UINT GetExceptionMode();
+    };
+    
+    [odl, uuid(a04bfb29-08ef-43d6-a49c-a9bdbdcbe686)]
+    interface ID3D11Device1 : ID3D11Device
+    {
+        HRESULT GetImmediateContext1(
+            [out, retval] ID3D11DeviceContext1 **ppImmediateContext);
+        HRESULT CreateDeferredContext1(
+            [in] UINT ContextFlags, // Reserved parameter; must be 0
+            [out, retval] ID3D11DeviceContext1 **ppDeferredContext);
+        HRESULT CreateBlendState1(
+            [in] D3D11_BLEND_DESC1 *pBlendStateDesc,
+            [out, retval] ID3D11BlendState1 **ppBlendState);
+        HRESULT CreateRasterizerState1(
+            [in] D3D11_RASTERIZER_DESC1 *pRasterizerDesc,
+            [out, retval] ID3D11RasterizerState1 **ppRasterizerState);
+        HRESULT CreateDeviceContextState(
+            [in] UINT Flags,
+            [in] D3D_FEATURE_LEVEL *pFeatureLevels,
+            [in] UINT FeatureLevels,
+            [in] UINT SDKVersion,
+            [in] REFIID EmulatedInterface,
+            [in, out] D3D_FEATURE_LEVEL  *pChosenFeatureLevel,
+            [out, retval] ID3DDeviceContextState **ppContextState);
+        HRESULT OpenSharedResource1(
+            [in] HANDLE hResource,
+            [in] REFIID returnedInterface,
+            [in, out] VBPTR *ppResource);
+        HRESULT OpenSharedResourceByName(
+            [in] LPCWSTR lpName,
+            [in] DWORD dwDesiredAccess,
+            [in] REFIID returnedInterface,
+            [in, out] VBPTR *ppResource);
+    };
+    
+    [odl, uuid(1841e5c8-16b0-489b-bcc8-44cfb0d5deae)]
+    interface ID3D11DeviceChild : IUnknown {
+        HRESULT GetDevice(
+            [out, retval] ID3D11Device **ppDevice);
+        HRESULT GetPrivateData(
+            [in] REFGUID guid,
+            [in, out] UINT *pDataSize,
+            [in] void *pData);
+        HRESULT SetPrivateData(
+            [in] REFGUID guid,
+            [in] UINT DataSize,
+            [in] void *pData);
+        HRESULT SetPrivateDataInterface(
+            [in] REFGUID guid,
+            [in] IUnknown *pData);
+    };
+
+    [odl, uuid(c0bfa96c-e089-44fb-8eaf-26f8796190da)]
+    interface ID3D11DeviceContext : ID3D11DeviceChild {
+        void VSSetConstantBuffers(
+            [in] UINT StartSlot,
+            [in] UINT NumBuffers,
+            [in] ID3D11Buffer **ppConstantBuffers);
+        void PSSetShaderResources(
+            [in] UINT StartSlot,
+            [in] UINT NumViews,
+            [in] ID3D11ShaderResourceView **ppShaderResourceViews);
+        void PSSetShader(
+            [in] ID3D11PixelShader *pPixelShader,
+            [in] ID3D11ClassInstance **ppClassInstances,
+            [in] UINT NumClassInstances);
+        void PSSetSamplers(
+            [in] UINT StartSlot,
+            [in] UINT NumSamplers,
+            [in] ID3D11SamplerState **ppSamplers);
+        void VSSetShader(
+            [in] ID3D11VertexShader *pVertexShader,
+            [in] ID3D11ClassInstance **ppClassInstances,
+            [in] UINT NumClassInstances);
+        void DrawIndexed(
+            [in] UINT IndexCount,
+            [in] UINT StartIndexLocation,
+            [in] INT BaseVertexLocation);
+        void Draw(
+            [in] UINT VertexCount,
+            [in] UINT StartVertexLocation);
+        VBHRESULT Map(
+            [in] ID3D11Resource *pResource,
+            [in] UINT Subresource,
+            [in] D3D11_MAP MapType,
+            [in] D3D11_MAP_FLAG MapFlags,
+            [in, out] D3D11_MAPPED_SUBRESOURCE *pMappedResource);
+        void Unmap(
+            [in] ID3D11Resource *pResource,
+            [in] UINT Subresource);
+        void PSSetConstantBuffers(
+            [in] UINT StartSlot,
+            [in] UINT NumBuffers,
+            [in] ID3D11Buffer **ppConstantBuffers);
+        void IASetInputLayout(
+            [in] ID3D11InputLayout *pInputLayout);
+        void IASetVertexBuffers(
+            [in] UINT StartSlot,
+            [in] UINT NumBuffers,
+            [in] ID3D11Buffer **ppVertexBuffers,
+            [in] UINT *pStrides,
+            [in] UINT *pOffsets);
+        void IASetIndexBuffer(
+            [in] ID3D11Buffer *pIndexBuffer,
+            [in] DXGI_FORMAT  Format,
+            [in] UINT Offset);
+
+        void DrawIndexedInstanced(
+            [in] UINT IndexCountPerInstance,
+            [in] UINT InstanceCount,
+            [in] UINT StartIndexLocation,
+            [in] INT BaseVertexLocation,
+            [in] UINT StartInstanceLocation);
+        void DrawInstanced(
+            [in] UINT VertexCountPerInstance,
+            [in] UINT InstanceCount,
+            [in] UINT StartVertexLocation,
+            [in] UINT StartInstanceLocation);
+        void GSSetConstantBuffers(
+            [in] UINT StartSlot,
+            [in] UINT NumBuffers,
+            [in] ID3D11Buffer **ppConstantBuffers);
+        void GSSetShader(
+            [in] ID3D11GeometryShader *pShader,
+            [in] ID3D11ClassInstance **ppClassInstances,
+            [in] UINT NumClassInstances);
+        void IASetPrimitiveTopology(
+            [in] D3D11_PRIMITIVE_TOPOLOGY Topology);
+        void VSSetShaderResources(
+            [in] UINT StartSlot,
+            [in] UINT NumViews,
+            [in] ID3D11ShaderResourceView **ppShaderResourceViews);
+        void VSSetSamplers(
+            [in] UINT StartSlot,
+            [in] UINT NumSamplers,
+            [in] ID3D11SamplerState **ppSamplers);
+        void Begin(
+            [in] ID3D11Asynchronous *pAsync);
+        void End(
+            [in] ID3D11Asynchronous *pAsync);
+        HRESULT GetData(
+            [in] ID3D11Asynchronous *pAsync,
+            [in, out] void *pData,
+            [in] UINT DataSize,
+            [in] UINT GetDataFlags);
+        void SetPredication(
+            [in] ID3D11Predicate *pPredicate,
+            [in] BOOL PredicateValue);
+        void GSSetShaderResources(
+            [in] UINT StartSlot,
+            [in] UINT NumViews,
+            [in] ID3D11ShaderResourceView **ppShaderResourceViews);
+        void GSSetSamplers(
+            [in] UINT StartSlot,
+            [in] UINT NumSamplers,
+            [in] ID3D11SamplerState **ppSamplers);
+        void OMSetRenderTargets(
+            [in] UINT NumViews,
+            [in] ID3D11RenderTargetView **ppRenderTargetViews,
+            [in] ID3D11DepthStencilView *pDepthStencilView);
+        void OMSetRenderTargetsAndUnorderedAccessViews(
+            [in] UINT NumRTVs,
+            [in] ID3D11RenderTargetView **ppRenderTargetViews,
+            [in] ID3D11DepthStencilView *pDepthStencilView,
+            [in] UINT UAVStartSlot,
+            [in] UINT NumUAVs,
+            [in] ID3D11UnorderedAccessView **ppUnorderedAccessViews,
+            [in] UINT *pUAVInitialCounts);
+        void OMSetBlendState( 
+            [in] ID3D11BlendState *pBlendState,
+            [in] FLOAT *BlendFactor,
+            [in] UINT SampleMask);
+        void OMSetDepthStencilState( 
+            [in] ID3D11DepthStencilState *pDepthStencilState,
+            [in] UINT StencilRef);
+        void SOSetTargets(
+            [in] UINT NumBuffers,
+            [in] ID3D11Buffer **ppSOTargets,
+            [in] UINT *pOffsets);
+        void DrawAuto();
+        void DrawIndexedInstancedIndirect(
+            [in] ID3D11Buffer *pBufferForArgs,
+            [in] UINT AlignedByteOffsetForArgs);
+        void DrawInstancedIndirect(
+            [in] ID3D11Buffer *pBufferForArgs,
+            [in] UINT AlignedByteOffsetForArgs);
+        void Dispatch(
+            [in] UINT ThreadGroupCountX,
+            [in] UINT ThreadGroupCountY,
+            [in] UINT ThreadGroupCountZ);
+        void DispatchIndirect(
+            [in] ID3D11Buffer *pBufferForArgs,
+            [in] UINT AlignedByteOffsetForArgs);
+        void RSSetState(
+            [in] ID3D11RasterizerState *pRasterizerState);
+        void RSSetViewports(
+            [in] UINT NumViewports,
+            [in] D3D11_VIEWPORT *pViewports);
+        void RSSetScissorRects(
+            [in] UINT NumRects,
+            [in] D3D11_RECT *pRects);
+        void CopySubresourceRegion(
+            [in] ID3D11Resource *pDstResource,
+            [in] UINT DstSubresource,
+            [in] UINT DstX,
+            [in] UINT DstY,
+            [in] UINT DstZ,
+            [in] ID3D11Resource *pSrcResource,
+            [in] UINT SrcSubresource,
+            [in] D3D11_BOX *pSrcBox);
+        void CopyResource(
+            [in] ID3D11Resource *pDstResource,
+            [in] ID3D11Resource *pSrcResource);
+        void UpdateSubresource(
+            [in] ID3D11Resource *pDstResource,
+            [in] UINT DstSubresource,
+            [in] D3D11_BOX *pDstBox,
+            [in] void *pSrcData,
+            [in] UINT SrcRowPitch,
+            [in] UINT SrcDepthPitch);
+        void CopyStructureCount(
+            [in] ID3D11Buffer *pDstBuffer,
+            [in] UINT DstAlignedByteOffset,
+            [in] ID3D11UnorderedAccessView *pSrcView);
+        void ClearRenderTargetView(
+            [in] ID3D11RenderTargetView *pRenderTargetView,
+            [in] FLOAT *ColorRGBA);
+        void ClearUnorderedAccessViewUint(
+            [in] ID3D11UnorderedAccessView *pUnorderedAccessView,
+            [in] UINT Values[4]);
+        void ClearUnorderedAccessViewFloat(
+            [in] ID3D11UnorderedAccessView *pUnorderedAccessView,
+            [in] FLOAT Values[4]);
+        void ClearDepthStencilView(
+            [in] ID3D11DepthStencilView *pDepthStencilView,
+            [in] UINT ClearFlags,
+            [in] FLOAT Depth,
+            [in] UINT8 Stencil);
+        void GenerateMips(
+            [in] ID3D11ShaderResourceView *pShaderResourceView);
+        void SetResourceMinLOD(
+            [in] ID3D11Resource *pResource, 
+            [in] FLOAT MinLOD);
+        FLOAT GetResourceMinLOD(
+            [in] ID3D11Resource *pResource);
+        void ResolveSubresource(
+            [in] ID3D11Resource *pDstResource,
+            [in] UINT DstSubresource,
+            [in] ID3D11Resource *pSrcResource,
+            [in] UINT SrcSubresource,
+            [in] DXGI_FORMAT Format);
+        void ExecuteCommandList(
+            [in] ID3D11CommandList *pCommandList,
+            [in] BOOL RestoreContextState);
+        void HSSetShaderResources(
+            [in] UINT StartSlot,
+            [in] UINT NumViews,
+            [in] ID3D11ShaderResourceView **ppShaderResourceViews);
+        void HSSetShader(
+            [in] ID3D11HullShader *pHullShader,
+            [in] ID3D11ClassInstance **ppClassInstances,
+            [in] UINT NumClassInstances);
+        void HSSetSamplers(
+            [in] UINT StartSlot,
+            [in] UINT NumSamplers,
+            [in] ID3D11SamplerState **ppSamplers);
+        void HSSetConstantBuffers(
+            [in] UINT StartSlot,
+            [in] UINT NumBuffers,
+            [in] ID3D11Buffer **ppConstantBuffers);
+        void DSSetShaderResources(
+            [in] UINT StartSlot,
+            [in] UINT NumViews,
+            [in] ID3D11ShaderResourceView **ppShaderResourceViews);
+        void DSSetShader(
+            [in] ID3D11DomainShader *pDomainShader,
+            [in] ID3D11ClassInstance **ppClassInstances,
+            [in] UINT NumClassInstances);
+        void DSSetSamplers(
+            [in] UINT StartSlot,
+            [in] UINT NumSamplers,
+            [in] ID3D11SamplerState **ppSamplers);
+        void DSSetConstantBuffers(
+            [in] UINT StartSlot,
+            [in] UINT NumBuffers,
+            [in] ID3D11Buffer **ppConstantBuffers);
+        void CSSetShaderResources(
+            [in] UINT StartSlot,
+            [in] UINT NumViews,
+            [in] ID3D11ShaderResourceView **ppShaderResourceViews);
+        void CSSetUnorderedAccessViews(
+            [in] UINT StartSlot,
+            [in] UINT NumUAVs,
+            [in] ID3D11UnorderedAccessView **ppUnorderedAccessViews,
+            [in] UINT *pUAVInitialCounts);
+        void CSSetShader(
+            [in] ID3D11ComputeShader *pComputeShader,
+            [in] ID3D11ClassInstance **ppClassInstances,
+            [in] UINT NumClassInstances);
+        void CSSetSamplers(
+            [in] UINT StartSlot,
+            [in] UINT NumSamplers,
+            [in] ID3D11SamplerState **ppSamplers);
+        void CSSetConstantBuffers(
+            [in] UINT StartSlot,
+            [in] UINT NumBuffers,
+            [in] ID3D11Buffer **ppConstantBuffers);
+        void VSGetConstantBuffers(
+            [in] UINT StartSlot,
+            [in] UINT NumBuffers,
+            [in, out] ID3D11Buffer **ppConstantBuffers);
+        void PSGetShaderResources(
+            [in] UINT StartSlot,
+            [in] UINT NumViews,
+            [in, out] ID3D11ShaderResourceView **ppShaderResourceViews);
+        void PSGetShader(
+            [in] ID3D11PixelShader **ppPixelShader,
+            [in] ID3D11ClassInstance **ppClassInstances,
+            [in, out] UINT *pNumClassInstances);
+        void PSGetSamplers(
+            [in] UINT StartSlot,
+            [in] UINT NumSamplers,
+            [in, out] ID3D11SamplerState **ppSamplers);
+        void VSGetShader(
+            [in] ID3D11VertexShader **ppVertexShader,
+            [in] ID3D11ClassInstance **ppClassInstances,
+            [in, out] UINT *pNumClassInstances);
+        void PSGetConstantBuffers(
+            [in] UINT StartSlot,
+            [in] UINT NumBuffers,
+            [in, out] ID3D11Buffer **ppConstantBuffers);
+        void IAGetInputLayout( [in] ID3D11InputLayout **ppInputLayout);
+        void IAGetVertexBuffers(
+            [in] UINT StartSlot,
+            [in] UINT NumBuffers,
+            [in, out] ID3D11Buffer **ppVertexBuffers,
+            [in, out] UINT *pStrides,
+            [in, out] UINT *pOffsets);
+        void IAGetIndexBuffer(
+            [out]ID3D11Buffer **pIndexBuffer,
+            [in, out] DXGI_FORMAT *Format,
+            [in, out] UINT *Offset);
+        void GSGetConstantBuffers(
+            [in] UINT StartSlot,
+            [in] UINT NumBuffers,
+            [in, out] ID3D11Buffer **ppConstantBuffers);
+        void GSGetShader(
+            [in] ID3D11GeometryShader **ppGeometryShader,
+            [in] ID3D11ClassInstance **ppClassInstances,
+            [in, out] UINT *pNumClassInstances);
+        void IAGetPrimitiveTopology(
+            [in, out] D3D11_PRIMITIVE_TOPOLOGY *pTopology);
+        void VSGetShaderResources(
+            [in] UINT StartSlot,
+            [in] UINT NumViews,
+            [in, out] ID3D11ShaderResourceView **ppShaderResourceViews);
+        void VSGetSamplers(
+            [in] UINT StartSlot,
+            [in] UINT NumSamplers,
+            [in, out] ID3D11SamplerState **ppSamplers);
+        void GetPredication(
+            [out]ID3D11Predicate **ppPredicate,
+            [in, out] BOOL *pPredicateValue);
+        void GSGetShaderResources(
+            [in] UINT StartSlot,
+            [in] UINT NumViews,
+            [in, out] ID3D11ShaderResourceView **ppShaderResourceViews);
+        void GSGetSamplers(
+            [in] UINT StartSlot,
+            [in] UINT NumSamplers,
+            [in, out] ID3D11SamplerState **ppSamplers);
+        void OMGetRenderTargets(
+            [in] UINT NumViews,
+            [in, out] ID3D11RenderTargetView **ppRenderTargetViews,
+            [out]ID3D11DepthStencilView **ppDepthStencilView);
+        void OMGetRenderTargetsAndUnorderedAccessViews(
+            [in] UINT NumRTVs,
+            [out] ID3D11RenderTargetView **ppRenderTargetViews,
+            [out] ID3D11DepthStencilView **ppDepthStencilView,
+            [in] UINT UAVStartSlot,
+            [in] UINT NumUAVs,
+            [in] ID3D11UnorderedAccessView **ppUnorderedAccessViews);
+        void OMGetBlendState( 
+            [out]ID3D11BlendState **ppBlendState,
+            [in] FLOAT *BlendFactor,
+            [in, out] UINT *pSampleMask);
+        void OMGetDepthStencilState(
+            [out]ID3D11DepthStencilState **ppDepthStencilState,
+            [in, out] UINT *pStencilRef);
+        void SOGetTargets(
+            [in] UINT NumBuffers,
+            [in, out] ID3D11Buffer **ppSOTargets);
+        void RSGetState( [in] ID3D11RasterizerState **ppRasterizerState);
+        void RSGetViewports(
+            [in] UINT *pNumViewports,
+            [in, out] D3D11_VIEWPORT *pViewports);
+        void RSGetScissorRects(
+            [in] UINT *pNumRects,
+            [in, out] D3D11_RECT *pRects);
+        void HSGetShaderResources(
+            [in] UINT StartSlot,
+            [in] UINT NumViews,
+            [in, out] ID3D11ShaderResourceView **ppShaderResourceViews);
+        void HSGetShader(
+            [in] ID3D11HullShader **ppHullShader,
+            [in] ID3D11ClassInstance **ppClassInstances,
+            [in, out] UINT *pNumClassInstances);
+        void HSGetSamplers(
+            [in] UINT StartSlot,
+            [in] UINT NumSamplers,
+            [in, out] ID3D11SamplerState **ppSamplers);
+        void HSGetConstantBuffers(
+            [in] UINT StartSlot,
+            [in] UINT NumBuffers,
+            [in, out] ID3D11Buffer **ppConstantBuffers);
+        void DSGetShaderResources(
+            [in] UINT StartSlot,
+            [in] UINT NumViews,
+            [in, out] ID3D11ShaderResourceView **ppShaderResourceViews);
+        void DSGetShader(
+            [in] ID3D11DomainShader **ppDomainShader,
+            [in] ID3D11ClassInstance **ppClassInstances,
+            [in, out] UINT *pNumClassInstances);
+        void DSGetSamplers(
+            [in] UINT StartSlot,
+            [in] UINT NumSamplers,
+            [in, out] ID3D11SamplerState **ppSamplers);
+        void DSGetConstantBuffers(
+            [in] UINT StartSlot,
+            [in] UINT NumBuffers,
+            [in, out] ID3D11Buffer **ppConstantBuffers);
+        void CSGetShaderResources(
+            [in] UINT StartSlot,
+            [in] UINT NumViews,
+            [in, out] ID3D11ShaderResourceView **ppShaderResourceViews);
+        void CSGetUnorderedAccessViews(
+            [in] UINT StartSlot,
+            [in] UINT NumUAVs,
+            [in] ID3D11UnorderedAccessView **ppUnorderedAccessViews);
+        void CSGetShader(
+            [in] ID3D11ComputeShader **ppComputeShader,
+            [in] ID3D11ClassInstance **ppClassInstances,
+            [in, out] UINT *pNumClassInstances);
+        void CSGetSamplers(
+            [in] UINT StartSlot,
+            [in] UINT NumSamplers,
+            [in, out] ID3D11SamplerState **ppSamplers);
+        void CSGetConstantBuffers(
+            [in] UINT StartSlot,
+            [in] UINT NumBuffers,
+            [in, out] ID3D11Buffer **ppConstantBuffers);
+        void ClearState();
+        void Flush();
+        D3D11_DEVICE_CONTEXT_TYPE GetType();
+        UINT GetContextFlags();
+        HRESULT FinishCommandList(
+            [in] BOOL RestoreDeferredContextState,
+            [out, retval] ID3D11CommandList **ppCommandList);
+    };
+    
+    [odl, uuid(bb2c6faa-b5fb-4082-8e6b-388b8cfa90e1)]
+    interface ID3D11DeviceContext1 : ID3D11DeviceContext
+    {
+        void CopySubresourceRegion1(
+            [in] ID3D11Resource *pDstResource,
+            [in] UINT DstSubresource,
+            [in] UINT DstX,
+            [in] UINT DstY,
+            [in] UINT DstZ,
+            [in] ID3D11Resource *pSrcResource,
+            [in] UINT SrcSubresource,
+            [in, out] D3D11_BOX *pSrcBox,
+            [in] UINT CopyFlags); 
+        void UpdateSubresource1(
+            [in] ID3D11Resource *pDstResource,
+            [in] UINT DstSubresource,	
+            [in, out] D3D11_BOX *pDstBox,
+            [in] void *pSrcData,
+            [in] UINT SrcRowPitch,
+            [in] UINT SrcDepthPitch,
+            [in] UINT CopyFlags);
+        void DiscardResource(
+            [in] ID3D11Resource *pResource);
+        void DiscardView (
+            [in] ID3D11View *pResourceView);
+        void VSSetConstantBuffers1(
+            [in] UINT StartSlot,
+            [in] UINT NumBuffers,
+            [in] ID3D11Buffer **ppConstantBuffers,
+            [in] UINT *pFirstConstant,
+            [in] UINT *pNumConstants);
+        void HSSetConstantBuffers1(
+            [in] UINT StartSlot,
+            [in] UINT NumBuffers,
+            [in] ID3D11Buffer **ppConstantBuffers,
+            [in] UINT *pFirstConstant,
+            [in] UINT *pNumConstants);
+        void DSSetConstantBuffers1(
+            [in] UINT StartSlot,
+            [in] UINT NumBuffers,
+            [in] ID3D11Buffer **ppConstantBuffers,
+            [in] UINT *pFirstConstant,
+            [in] UINT *pNumConstants);
+        void GSSetConstantBuffers1(
+            [in] UINT StartSlot,
+            [in] UINT NumBuffers,
+            [in] ID3D11Buffer **ppConstantBuffers,
+            [in] UINT *pFirstConstant,
+            [in] UINT *pNumConstants);
+        void PSSetConstantBuffers1(
+            [in] UINT StartSlot,
+            [in] UINT NumBuffers,
+            [in] ID3D11Buffer **ppConstantBuffers,
+            [in] UINT *pFirstConstant,
+            [in] UINT *pNumConstants);
+        void CSSetConstantBuffers1(
+            [in] UINT StartSlot,
+            [in] UINT NumBuffers,
+            [in] ID3D11Buffer **ppConstantBuffers,
+            [in] UINT *pFirstConstant,
+            [in] UINT *pNumConstants);
+        void VSGetConstantBuffers1(
+            [in] UINT StartSlot,
+            [in] UINT NumBuffers,
+            [in, out] ID3D11Buffer **ppConstantBuffers,
+            [in, out] UINT *pFirstConstant,
+            [in, out] UINT *pNumConstants);
+        void HSGetConstantBuffers1(
+            [in] UINT StartSlot,
+            [in] UINT NumBuffers,
+            [in, out] ID3D11Buffer **ppConstantBuffers,
+            [in, out] UINT *pFirstConstant,
+            [in, out] UINT *pNumConstants);
+        void DSGetConstantBuffers1(
+            [in] UINT StartSlot,
+            [in] UINT NumBuffers,
+            [in, out] ID3D11Buffer **ppConstantBuffers,
+            [in, out] UINT *pFirstConstant,
+            [in, out] UINT *pNumConstants);
+        void GSGetConstantBuffers1(
+            [in] UINT StartSlot,
+            [in] UINT NumBuffers,
+            [in, out] ID3D11Buffer **ppConstantBuffers,
+            [in, out] UINT *pFirstConstant,
+            [in, out] UINT *pNumConstants);
+        void PSGetConstantBuffers1(
+            [in] UINT StartSlot,
+            [in] UINT NumBuffers,
+            [in, out] ID3D11Buffer **ppConstantBuffers,
+            [in, out] UINT *pFirstConstant,
+            [in, out] UINT *pNumConstants);
+        void CSGetConstantBuffers1(
+            [in] UINT StartSlot,
+            [in] UINT NumBuffers,
+            [in, out] ID3D11Buffer **ppConstantBuffers,
+            [in, out] UINT *pFirstConstant,
+            [in, out] UINT *pNumConstants);
+        void SwapDeviceContextState(
+            [in] ID3DDeviceContextState *pState, 
+            [in, out] ID3DDeviceContextState **ppPreviousState);
+        void ClearView(
+            [in] ID3D11View *pView,
+            [in] FLOAT *Color,
+            [in] D3D11_RECT *pRect,
+            [in] UINT NumRects);
+        void DiscardView1 (
+            [in] ID3D11View *pResourceView,
+            [in] D3D11_RECT *pRects,
+            [in] UINT NumRects
+    );
+    };
+    
+    [odl, uuid(dc8e63f3-d12b-4952-b47b-5e45026a862d)]
+    interface ID3D11Resource : ID3D11DeviceChild
+    {
+        void GetType(
+            [in, out] D3D11_RESOURCE_DIMENSION *pResourceDimension);
+        void SetEvictionPriority(
+            [in] UINT EvictionPriority);
+        UINT GetEvictionPriority();
+    };
+    
+    [odl, uuid(6f15aaf2-d208-4e89-9ab4-489535d34f9c)]
+    interface ID3D11Texture2D : ID3D11Resource
+    {
+        void GetDesc(
+            [in, out] D3D11_TEXTURE2D_DESC *pDesc);
+    };
+    
+    [odl, uuid(79cf2233-7536-4948-9d36-1e4692dc5760)]
+    interface ID3D11Debug : IUnknown
+    {
+        HRESULT SetFeatureMask(
+            [in] UINT Mask);
+        UINT GetFeatureMask();
+        HRESULT SetPresentPerRenderOpDelay(
+            [in] UINT Milliseconds);
+        UINT GetPresentPerRenderOpDelay();
+        HRESULT SetSwapChain(
+            [in] IDXGISwapChain *pSwapChain);
+        HRESULT GetSwapChain(
+            [out, retval] IDXGISwapChain **ppSwapChain);
+        HRESULT ValidateContext(
+            [in] ID3D11DeviceContext *pContext);
+        HRESULT ReportLiveDeviceObjects(
+            [in] D3D11_RLDO_FLAGS Flags);
+        HRESULT ValidateContextForDispatch(
+            [in] ID3D11DeviceContext *pContext);
+    };
+    
+    [odl, uuid(6543dbb6-1b48-42f5-ab82-e97ec74326f6)]
+    interface ID3D11InfoQueue : IUnknown
+    {
+        HRESULT SetMessageCountLimit(
+            [in] UINT64 MessageCountLimit);
+        void ClearStoredMessages();
+        HRESULT GetMessage(
+            [in] UINT64 MessageIndex,
+            [in, out] D3D11_MESSAGE *pMessage,
+            [in, out] SIZE_T  *pMessageByteLength);
+        UINT64 GetNumMessagesAllowedByStorageFilter();
+        UINT64 GetNumMessagesDeniedByStorageFilter();
+        UINT64 GetNumStoredMessages();
+        UINT64 GetNumStoredMessagesAllowedByRetrievalFilter();
+        UINT64 GetNumMessagesDiscardedByMessageCountLimit();
+        UINT64 GetMessageCountLimit();
+        HRESULT AddStorageFilterEntries(
+            [in] D3D11_INFO_QUEUE_FILTER *pFilter);
+        HRESULT GetStorageFilter(
+            [in, out] D3D11_INFO_QUEUE_FILTER *pFilter,
+            [in, out] SIZE_T *pFilterByteLength);
+        void ClearStorageFilter();
+        HRESULT PushEmptyStorageFilter();
+        HRESULT PushCopyOfStorageFilter();
+        HRESULT PushStorageFilter(
+            [in] D3D11_INFO_QUEUE_FILTER *pFilter);
+        void PopStorageFilter();
+        UINT GetStorageFilterStackSize();
+        HRESULT AddRetrievalFilterEntries(
+            [in] D3D11_INFO_QUEUE_FILTER *pFilter);
+        HRESULT GetRetrievalFilter(
+            [in, out] D3D11_INFO_QUEUE_FILTER *pFilter,
+            [in, out] SIZE_T *pFilterByteLength);
+        void ClearRetrievalFilter();
+        HRESULT PushEmptyRetrievalFilter();
+        HRESULT PushCopyOfRetrievalFilter();
+        HRESULT PushRetrievalFilter(
+            [in] D3D11_INFO_QUEUE_FILTER *pFilter);
+        void PopRetrievalFilter();
+        UINT GetRetrievalFilterStackSize();
+        HRESULT AddMessage(
+            [in] D3D11_MESSAGE_CATEGORY Category,
+            [in] D3D11_MESSAGE_SEVERITY Severity,
+            [in] D3D11_MESSAGE_ID ID,
+            [in] LPCSTR  pDescription);
+        HRESULT AddApplicationMessage(
+            [in] D3D11_MESSAGE_SEVERITY Severity,
+            [in] LPCSTR pDescription);
+        HRESULT SetBreakOnCategory(
+            [in] D3D11_MESSAGE_CATEGORY Category,
+            [in] BOOL bEnable);
+        HRESULT SetBreakOnSeverity(
+            [in] D3D11_MESSAGE_SEVERITY Severity,
+            [in] BOOL bEnable);
+        HRESULT SetBreakOnID(
+            [in] D3D11_MESSAGE_ID ID,
+            [in] BOOL bEnable);
+        BOOL GetBreakOnCategory(
+            [in] D3D11_MESSAGE_CATEGORY Category);
+        BOOL GetBreakOnSeverity(
+            [in] D3D11_MESSAGE_SEVERITY Severity);
+        BOOL GetBreakOnID(
+            [in] D3D11_MESSAGE_ID ID);
+        void SetMuteDebugOutput(
+            [in] BOOL bMute);
+        BOOL GetMuteDebugOutput();
+    };
+    
+    [odl, uuid(75b68faa-347d-4159-8f45-a0640f01cd9a)]
+    interface ID3D11BlendState : ID3D11DeviceChild
+    {
+        void GetDesc(
+            [in, out] D3D11_BLEND_DESC *pDesc);
+    };
+    
+    [odl, uuid(cc86fabe-da55-401d-85e7-e3c9de2877e9)]
+    interface ID3D11BlendState1 : ID3D11BlendState
+    {
+        void GetDesc1(
+            [in, out] D3D11_BLEND_DESC1 *pDesc);
+    };
+    
+    [odl, uuid( 9bb4ab81-ab1a-4d8f-b506-fc04200b6ee7)]
+    interface ID3D11RasterizerState : ID3D11DeviceChild
+    {
+        void GetDesc(
+            [in, out] D3D11_RASTERIZER_DESC *pDesc);
+    };
+
+    [odl, uuid(1217d7a6-5039-418c-b042-9cbe256afd6e)]
+    interface ID3D11RasterizerState1 : ID3D11RasterizerState
+    {
+        void GetDesc1(
+            [in, out] D3D11_RASTERIZER_DESC1 *pDesc);
+    };
+    
+    [odl, uuid(5c1e0d8a-7c23-48f9-8c59-a92958ceff11)]
+    interface ID3DDeviceContextState : ID3D11DeviceChild
+    {
+    };
+    
+    [odl, uuid(839d1216-bb2e-412b-b7f4-a9dbebe08ed1)]
+    interface ID3D11View : ID3D11DeviceChild
+    {
+        void GetResource(
+            [in, out] ID3D11Resource **ppResource);
+    };
+    
+    [odl, uuid(dfdba067-0b8d-4865-875b-d7b4516cc164)]
+    interface ID3D11RenderTargetView : ID3D11View
+    {
+        void GetDesc(
+            [in, out] D3D11_RENDER_TARGET_VIEW_DESC *pDesc);
+    };
+    
+    [odl, uuid(a24bc4d1-769e-43f7-8013-98ff566c18e2)]
+    interface ID3D11CommandList : ID3D11DeviceChild
+    {
+        UINT GetContextFlags();
+    };
+
+//**********************************************************************
+//
+//  DXGI
+//
+//**********************************************************************
+
+    typedef void DXGI_GAMMA_CONTROL_CAPABILITIES;
+    typedef void DXGI_GAMMA_CONTROL;
+    typedef void DXGI_FRAME_STATISTICS;
+    
+    typedef [public] UINT DXGI_USAGE;
+    
+    typedef enum D3D11_CREATE_DEVICE_FLAG
+    {
+        D3D11_CREATE_DEVICE_SINGLETHREADED = 0x1,
+        D3D11_CREATE_DEVICE_DEBUG = 0x2,
+        D3D11_CREATE_DEVICE_SWITCH_TO_REF = 0x4,
+        D3D11_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS = 0x8,
+        D3D11_CREATE_DEVICE_BGRA_SUPPORT = 0x20,
+        D3D11_CREATE_DEVICE_DEBUGGABLE = 0x40,
+        D3D11_CREATE_DEVICE_PREVENT_ALTERING_LAYER_SETTINGS_FROM_REGISTRY = 0x0080,
+        D3D11_CREATE_DEVICE_DISABLE_GPU_TIMEOUT = 0x0100,
+        D3D11_CREATE_DEVICE_VIDEO_SUPPORT = 0x0800,
+
+    } D3D11_CREATE_DEVICE_FLAG;
+
+    typedef enum DXGI_MODE_ROTATION
+    {
+        DXGI_MODE_ROTATION_UNSPECIFIED  = 0,
+        DXGI_MODE_ROTATION_IDENTITY     = 1,
+        DXGI_MODE_ROTATION_ROTATE90     = 2,
+        DXGI_MODE_ROTATION_ROTATE180    = 3,
+        DXGI_MODE_ROTATION_ROTATE270    = 4
+    } DXGI_MODE_ROTATION;
+    
+    typedef enum DXGI_MODE_SCANLINE_ORDER
+    {
+        DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED        = 0,
+        DXGI_MODE_SCANLINE_ORDER_PROGRESSIVE        = 1,
+        DXGI_MODE_SCANLINE_ORDER_UPPER_FIELD_FIRST  = 2,
+        DXGI_MODE_SCANLINE_ORDER_LOWER_FIELD_FIRST  = 3
+    } DXGI_MODE_SCANLINE_ORDER;
+    
+    typedef enum DXGI_MODE_SCALING
+    {
+        DXGI_MODE_SCALING_UNSPECIFIED   = 0,
+        DXGI_MODE_SCALING_CENTERED      = 1,
+        DXGI_MODE_SCALING_STRETCHED     = 2
+    } DXGI_MODE_SCALING;
+    
+    typedef enum DXGI_OUTDUPL_POINTER_SHAPE_TYPE
+    {
+        DXGI_OUTDUPL_POINTER_SHAPE_TYPE_MONOCHROME     = 0x00000001,
+        DXGI_OUTDUPL_POINTER_SHAPE_TYPE_COLOR          = 0x00000002,
+        DXGI_OUTDUPL_POINTER_SHAPE_TYPE_MASKED_COLOR   = 0x00000004
+    } DXGI_OUTDUPL_POINTER_SHAPE_TYPE;
+    
+    typedef enum DXGI_RESIDENCY
+    {
+        DXGI_RESIDENCY_FULLY_RESIDENT = 1,
+        DXGI_RESIDENCY_RESIDENT_IN_SHARED_MEMORY = 2,
+        DXGI_RESIDENCY_EVICTED_TO_DISK = 3,
+    } DXGI_RESIDENCY;
+    
+    typedef enum DXGI_COLOR_SPACE_TYPE
+    {
+        DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709             = 0,
+        DXGI_COLOR_SPACE_RGB_FULL_G10_NONE_P709             = 1,
+        DXGI_COLOR_SPACE_RGB_STUDIO_G22_NONE_P709           = 2,
+        DXGI_COLOR_SPACE_RGB_STUDIO_G22_NONE_P2020          = 3,
+        DXGI_COLOR_SPACE_RESERVED                           = 4,
+        DXGI_COLOR_SPACE_YCBCR_FULL_G22_NONE_P709_X601      = 5,
+        DXGI_COLOR_SPACE_YCBCR_STUDIO_G22_LEFT_P601         = 6,
+        DXGI_COLOR_SPACE_YCBCR_FULL_G22_LEFT_P601           = 7,
+        DXGI_COLOR_SPACE_YCBCR_STUDIO_G22_LEFT_P709         = 8,
+        DXGI_COLOR_SPACE_YCBCR_FULL_G22_LEFT_P709           = 9,
+        DXGI_COLOR_SPACE_YCBCR_STUDIO_G22_LEFT_P2020        = 10,
+        DXGI_COLOR_SPACE_YCBCR_FULL_G22_LEFT_P2020          = 11,
+        DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020          = 12,
+        DXGI_COLOR_SPACE_YCBCR_STUDIO_G2084_LEFT_P2020      = 13,
+        DXGI_COLOR_SPACE_RGB_STUDIO_G2084_NONE_P2020        = 14,
+        DXGI_COLOR_SPACE_YCBCR_STUDIO_G22_TOPLEFT_P2020     = 15,
+        DXGI_COLOR_SPACE_YCBCR_STUDIO_G2084_TOPLEFT_P2020   = 16,
+        DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P2020            = 17,
+        DXGI_COLOR_SPACE_YCBCR_STUDIO_GHLG_TOPLEFT_P2020    = 18,
+        DXGI_COLOR_SPACE_YCBCR_FULL_GHLG_TOPLEFT_P2020      = 19,
+        DXGI_COLOR_SPACE_RGB_STUDIO_G24_NONE_P709           = 20,
+        DXGI_COLOR_SPACE_RGB_STUDIO_G24_NONE_P2020          = 21,
+        DXGI_COLOR_SPACE_YCBCR_STUDIO_G24_LEFT_P709         = 22,
+        DXGI_COLOR_SPACE_YCBCR_STUDIO_G24_LEFT_P2020        = 23,
+        DXGI_COLOR_SPACE_YCBCR_STUDIO_G24_TOPLEFT_P2020     = 24,
+        DXGI_COLOR_SPACE_CUSTOM                             = 0xFFFFFFFF
+    } DXGI_COLOR_SPACE_TYPE;
+    
+    typedef enum DXGI_SWAP_EFFECT
+    {
+        DXGI_SWAP_EFFECT_DISCARD = 0,
+        DXGI_SWAP_EFFECT_SEQUENTIAL = 1,
+        DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL = 3,
+        DXGI_SWAP_EFFECT_FLIP_DISCARD = 4,
+    } DXGI_SWAP_EFFECT;
+    
+    typedef enum DXGI_SCALING
+    {
+        DXGI_SCALING_STRETCH = 0,
+        DXGI_SCALING_NONE = 1,
+        DXGI_SCALING_ASPECT_RATIO_STRETCH = 2,
+    } DXGI_SCALING;
+    
+    typedef enum DXGI_ALPHA_MODE
+    {
+        DXGI_ALPHA_MODE_UNSPECIFIED = 0,
+        DXGI_ALPHA_MODE_PREMULTIPLIED = 1,
+        DXGI_ALPHA_MODE_STRAIGHT = 2,
+        DXGI_ALPHA_MODE_IGNORE = 3,
+        DXGI_ALPHA_MODE_FORCE_DWORD = 0xffffffff
+    } DXGI_ALPHA_MODE;
+    
+    typedef enum DXGI_SWAP_CHAIN_FLAG
+    {
+        DXGI_SWAP_CHAIN_FLAG_NONPREROTATED = 1,
+        DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH = 2,
+        DXGI_SWAP_CHAIN_FLAG_GDI_COMPATIBLE = 4,
+        DXGI_SWAP_CHAIN_FLAG_RESTRICTED_CONTENT = 8,
+        DXGI_SWAP_CHAIN_FLAG_RESTRICT_SHARED_RESOURCE_DRIVER = 16,
+        DXGI_SWAP_CHAIN_FLAG_DISPLAY_ONLY = 32,
+        DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT = 64,
+        DXGI_SWAP_CHAIN_FLAG_FOREGROUND_LAYER = 128,
+        DXGI_SWAP_CHAIN_FLAG_FULLSCREEN_VIDEO = 256,
+        DXGI_SWAP_CHAIN_FLAG_YUV_VIDEO = 512,
+        DXGI_SWAP_CHAIN_FLAG_HW_PROTECTED = 1024,
+        DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING = 2048,
+        DXGI_SWAP_CHAIN_FLAG_RESTRICTED_TO_ALL_HOLOGRAPHIC_DISPLAYS = 4096,
+    } DXGI_SWAP_CHAIN_FLAG;
+    
+    typedef struct DXGI_MAPPED_RECT
+    {
+        INT     Pitch;
+        VBPTR   pBitsPtr;
+    } DXGI_MAPPED_RECT;
+    
+    typedef [public] D3DCOLORVALUE DXGI_RGBA;
+    
+    typedef struct DXGI_OUTPUT_DESC
+    {
+        BYTE   DeviceName[64]; // Device name for GDI (ex. \\.\DISPLAY1)
+        RECT    DesktopCoordinates;
+        BOOL    AttachedToDesktop;
+        DXGI_MODE_ROTATION Rotation;
+        HMONITOR Monitor;
+    } DXGI_OUTPUT_DESC;
+
+    typedef struct DXGI_RATIONAL
+    {
+        UINT Numerator;
+        UINT Denominator;
+    } DXGI_RATIONAL;
+
+    typedef struct DXGI_MODE_DESC
+    {
+        UINT Width;
+        UINT Height;
+        DXGI_RATIONAL RefreshRate;
+        DXGI_FORMAT Format;
+        DXGI_MODE_SCANLINE_ORDER ScanlineOrdering;
+        DXGI_MODE_SCALING Scaling;
+    } DXGI_MODE_DESC;
+    
+    typedef struct DXGI_MODE_DESC1
+    {
+        UINT Width;
+        UINT Height;
+        DXGI_RATIONAL RefreshRate;
+        DXGI_FORMAT Format;
+        DXGI_MODE_SCANLINE_ORDER ScanlineOrdering;
+        DXGI_MODE_SCALING Scaling;
+        BOOL Stereo;
+    } DXGI_MODE_DESC1;
+    
+    typedef struct LUID {
+        DWORD   LowPart;
+        LONG    HighPart;
+    } LUID;
+
+    typedef struct DXGI_ADAPTER_DESC
+    {
+        BYTE Description[256];
+
+        UINT VendorId;
+        UINT DeviceId;
+        UINT SubSysId;
+        UINT Revision;
+
+        SIZE_T DedicatedVideoMemory;
+        SIZE_T DedicatedSystemMemory;
+        SIZE_T SharedSystemMemory;
+
+        LUID AdapterLuid;
+    } DXGI_ADAPTER_DESC;
+
+    typedef struct DXGI_ADAPTER_DESC1
+    {
+        BYTE Description[256];
+
+        UINT VendorId;
+        UINT DeviceId;
+        UINT SubSysId;
+        UINT Revision;
+
+        SIZE_T DedicatedVideoMemory;
+        SIZE_T DedicatedSystemMemory;
+        SIZE_T SharedSystemMemory;
+
+        LUID AdapterLuid;
+        UINT Flags;
+    } DXGI_ADAPTER_DESC1;
+
+    typedef struct DXGI_OUTDUPL_DESC
+    {
+        DXGI_MODE_DESC        ModeDesc;
+        DXGI_MODE_ROTATION    Rotation;
+        BOOL                  DesktopImageInSystemMemory;
+    } DXGI_OUTDUPL_DESC;
+    
+    typedef struct DXGI_OUTDUPL_POINTER_POSITION
+    {
+        POINT   Position;
+        BOOL    Visible;
+    } DXGI_OUTDUPL_POINTER_POSITION;
+    
+    typedef struct DXGI_OUTDUPL_FRAME_INFO
+    {
+        LARGE_INTEGER                       LastPresentTime;
+        LARGE_INTEGER                       LastMouseUpdateTime;
+        UINT                             AccumulatedFrames;
+        BOOL                                RectsCoalesced;
+        BOOL                                ProtectedContentMaskedOut;
+        DXGI_OUTDUPL_POINTER_POSITION       PointerPosition;
+        UINT                             TotalMetadataBufferSize;
+        UINT                             PointerShapeBufferSize;
+    } DXGI_OUTDUPL_FRAME_INFO;
+    
+    typedef struct DXGI_OUTDUPL_MOVE_RECT
+    {
+        POINT   SourcePoint;
+        RECT    DestinationRect;
+    } DXGI_OUTDUPL_MOVE_RECT;
+    
+    typedef struct DXGI_OUTDUPL_POINTER_SHAPE_INFO
+    {
+        DXGI_OUTDUPL_POINTER_SHAPE_TYPE    Type;
+        UINT Width;
+        UINT Height;
+        UINT Pitch;
+        POINT   HotSpot;
+    } DXGI_OUTDUPL_POINTER_SHAPE_INFO;
+    
+    typedef struct DXGI_SWAP_CHAIN_DESC
+    {
+        DXGI_MODE_DESC          BufferDesc;
+        DXGI_SAMPLE_DESC        SampleDesc;
+        DXGI_USAGE              BufferUsage;
+        UINT                 BufferCount;
+        HWND                    OutputWindow;
+        BOOL                    Windowed;
+        DXGI_SWAP_EFFECT        SwapEffect;
+        DXGI_SWAP_CHAIN_FLAG    Flags;
+    } DXGI_SWAP_CHAIN_DESC;
+    
+    typedef struct DXGI_SWAP_CHAIN_DESC1
+    {
+        UINT                 Width;
+        UINT                 Height;
+        DXGI_FORMAT             Format;
+        BOOL                    Stereo;
+        DXGI_SAMPLE_DESC        SampleDesc;
+        DXGI_USAGE              BufferUsage;
+        UINT                 BufferCount;
+        DXGI_SCALING            Scaling;
+        DXGI_SWAP_EFFECT        SwapEffect;
+        DXGI_ALPHA_MODE         AlphaMode;
+        DXGI_SWAP_CHAIN_FLAG    Flags;
+    } DXGI_SWAP_CHAIN_DESC1;
+
+    typedef struct DXGI_SWAP_CHAIN_FULLSCREEN_DESC
+    {
+        DXGI_RATIONAL RefreshRate;
+        DXGI_MODE_SCANLINE_ORDER ScanlineOrdering;
+        DXGI_MODE_SCALING Scaling;
+        BOOL Windowed;
+    } DXGI_SWAP_CHAIN_FULLSCREEN_DESC;
+
+    typedef struct DXGI_PRESENT_PARAMETERS
+    {
+        UINT DirtyRectsCount;
+        RECT *pDirtyRects;
+        RECT *pScrollRect;
+        POINT *pScrollOffset;
+    } DXGI_PRESENT_PARAMETERS;
+    
+    typedef struct DXGI_SHARED_RESOURCE
+    {
+        HANDLE Handle;
+    } DXGI_SHARED_RESOURCE;
+    
+    typedef struct DXGI_SURFACE_DESC
+    {
+        UINT Width;
+        UINT Height;
+        DXGI_FORMAT Format;
+        DXGI_SAMPLE_DESC SampleDesc;
+    } DXGI_SURFACE_DESC;
+    
+    [odl, uuid(aec22fb8-76f3-4639-9be0-28eb43a67a2e)]
+    interface IDXGIObject : IUnknown {
+        HRESULT SetPrivateData(
+            [in] REFGUID guid,
+            [in] UINT DataSize,
+            [in] void *pData);
+        HRESULT SetPrivateDataInterface(
+            [in] REFGUID guid,
+            [in] IUnknown *pUnknown);
+        HRESULT GetPrivateData(
+            [in] REFGUID guid,
+            [in, out] UINT *pDataSize,
+            [in, out] void *pData);
+        HRESULT GetParent(
+            [in] REFIID riid,
+            [out, retval] IUnknown **ppParent);
+    };
+    
+    [odl, uuid(3d3e0379-f9de-4d58-bb6c-18d62992f1a6)]
+    interface IDXGIDeviceSubObject : IDXGIObject
+    {
+        HRESULT GetDevice(
+            [in] REFIID riid,
+            [out, retval] void **ppDevice);
+    };
+    
+    [odl, uuid(7b7166ec-21c7-44ae-b21a-c9ae321ae369)]
+    interface IDXGIFactory : IDXGIObject
+    {
+        VBHRESULT EnumAdapters(
+            [in] UINT Adapter,
+            [in, out] IDXGIAdapter **ppAdapter);
+        HRESULT MakeWindowAssociation(
+            [in] HWND WindowHandle, 
+            [in] UINT Flags);
+        HRESULT GetWindowAssociation(
+            [out, retval] HWND *pWindowHandle);
+        HRESULT CreateSwapChain(
+            [in] IUnknown *pDevice,
+            [in] DXGI_SWAP_CHAIN_DESC *pDesc,
+            [out, retval] IDXGISwapChain **ppSwapChain);
+        HRESULT CreateSoftwareAdapter(
+            [in] HMODULE Module,
+            [out, retval] IDXGIAdapter **ppAdapter);
+    };
+    
+    [odl, uuid(770aae78-f26f-4dba-a829-253c83d1b387)]
+    interface IDXGIFactory1 : IDXGIFactory
+    {
+        VBHRESULT EnumAdapters1(
+            [in] UINT Adapter,
+            [in, out] IDXGIAdapter1 **ppAdapter);
+        BOOL IsCurrent();
+    };
+    
+    [odl, uuid(50c83a1c-e072-4c48-87b0-3630fa36a6d0)]
+    interface IDXGIFactory2 : IDXGIFactory1
+    {
+        BOOL IsWindowedStereoEnabled();
+        HRESULT CreateSwapChainForHwnd(
+            [in] IUnknown *pDevice,
+            [in] HWND hWnd,
+            [in] DXGI_SWAP_CHAIN_DESC1 *pDesc,
+            [in] void *pFullscreenDesc,
+            [in] IDXGIOutput *pRestrictToOutput,
+            [out, retval] IDXGISwapChain1 **ppSwapChain);
+        HRESULT CreateSwapChainForCoreWindow(
+            [in] IUnknown *pDevice,
+            [in] IUnknown *pWindow,
+            [in] DXGI_SWAP_CHAIN_DESC1 *pDesc,
+            [in] IDXGIOutput *pRestrictToOutput,
+            [out, retval] IDXGISwapChain1 **ppSwapChain);
+        HRESULT GetSharedResourceAdapterLuid(
+            [in] HANDLE hResource,
+            [in, out] LUID *pLuid);
+        HRESULT RegisterStereoStatusWindow(
+            [in] HWND WindowHandle,
+            [in] UINT wMsg,
+            [out, retval] DWORD *pdwCookie);
+        HRESULT RegisterStereoStatusEvent(
+            [in] HANDLE hEvent,
+            [out, retval] DWORD *pdwCookie);
+        void UnregisterStereoStatus(
+            [in] DWORD dwCookie);
+        HRESULT RegisterOcclusionStatusWindow(
+            [in] HWND WindowHandle,
+            [in] UINT wMsg,
+            [out, retval] DWORD *pdwCookie);
+        HRESULT RegisterOcclusionStatusEvent(
+            [in] HANDLE hEvent,
+            [out, retval] DWORD *pdwCookie);
+        void UnregisterOcclusionStatus(
+            [in] DWORD dwCookie);
+        HRESULT CreateSwapChainForComposition(
+            [in] IUnknown *pDevice,
+            [in] DXGI_SWAP_CHAIN_DESC1 *pDesc,
+            [in] IDXGIOutput *pRestrictToOutput,
+            [out, retval] IDXGISwapChain1 **ppSwapChain);
+    };
+    
+    [odl, uuid(310d36a0-d2e7-4c0a-aa04-6a9d23b8886a)]
+    interface IDXGISwapChain : IDXGIDeviceSubObject
+    {
+        HRESULT Present(
+            [in] UINT SyncInterval, 
+            [in] UINT Flags);
+        HRESULT GetBuffer(
+            [in] UINT Buffer,
+            [in] REFIID riid,
+            [out, retval] IUnknown **ppSurface);
+        HRESULT SetFullscreenState(
+            [in] BOOL Fullscreen,
+            [in] IDXGIOutput *pTarget);
+        HRESULT GetFullscreenState(
+            [in, out] BOOL *pFullscreen,
+            [in, out] IDXGIOutput **ppTarget);
+        HRESULT GetDesc(
+            [in, out] DXGI_SWAP_CHAIN_DESC *pDesc);
+        HRESULT ResizeBuffers(
+            [in] UINT BufferCount, 
+            [in] UINT Width, 
+            [in] UINT Height, 
+            [in] DXGI_FORMAT NewFormat, 
+            [in] UINT SwapChainFlags);
+        HRESULT ResizeTarget(
+            [in] DXGI_MODE_DESC *pNewTargetParameters);
+        HRESULT GetContainingOutput(
+            [out, retval] IDXGIOutput **ppOutput);
+        HRESULT GetFrameStatistics(
+            [in, out] DXGI_FRAME_STATISTICS *pStats);
+        HRESULT GetLastPresentCount(
+            [in, out] UINT *pLastPresentCount);
+    };
+    
+    [odl, uuid(790a45f7-0d42-4876-983a-0a55cfe6f4aa)]
+    interface IDXGISwapChain1 : IDXGISwapChain
+    {
+        HRESULT GetDesc1(
+            [in, out] DXGI_SWAP_CHAIN_DESC1 *pDesc);
+        HRESULT GetFullscreenDesc(
+            [in, out] DXGI_SWAP_CHAIN_FULLSCREEN_DESC *pDesc);
+        HRESULT GetHwnd(
+            [in, out] HWND *pHwnd);
+        HRESULT GetCoreWindow (
+            [in] REFIID refiid,
+            [out, retval] void **ppUnk);
+        HRESULT Present1(
+            [in] UINT SyncInterval,
+            [in] UINT PresentFlags,
+            [in] DXGI_PRESENT_PARAMETERS *pPresentParameters);
+        BOOL IsTemporaryMonoSupported();
+        HRESULT GetRestrictToOutput(
+            [out, retval] IDXGIOutput **ppRestrictToOutput);
+        HRESULT SetBackgroundColor(
+            [in] DXGI_RGBA *pColor);
+        HRESULT GetBackgroundColor(
+            [out, retval] DXGI_RGBA *pColor);
+        HRESULT SetRotation(
+            [in] DXGI_MODE_ROTATION Rotation);
+        HRESULT GetRotation(
+            [out, retval] DXGI_MODE_ROTATION *pRotation);
+    };
+
+    
+    [odl, uuid(2411e7e1-12ac-4ccf-bd14-9798e8534dc0)]
+    interface IDXGIAdapter : IDXGIObject {
+        VBHRESULT EnumOutputs(
+            [in] UINT Output,
+            [in, out] IDXGIOutput **ppOutput);
+        HRESULT GetDesc(
+            [in, out] DXGI_ADAPTER_DESC *pDesc);
+        HRESULT CheckInterfaceSupport(
+            [in] REFGUID InterfaceName,
+            [in, out] LARGE_INTEGER *pUMDVersion);
+    };
+    
+    [odl, uuid( 29038f61-3839-4626-91fd-086879011a05 )]
+    interface IDXGIAdapter1 : IDXGIAdapter
+    {
+        HRESULT GetDesc1(
+            [in, out] DXGI_ADAPTER_DESC1 *pDesc);
+    };
+    
+    
+    [odl, uuid(ae02eedb-c735-4690-8d52-5a8dc20213aa)]
+    interface IDXGIOutput : IDXGIObject
+    {
+        HRESULT GetDesc(
+            [in, out] DXGI_OUTPUT_DESC *pDesc);
+        HRESULT GetDisplayModeList(
+            [in] DXGI_FORMAT EnumFormat,
+            [in] UINT Flags,
+            [in, out] UINT *pNumModes,
+            [in, out] DXGI_MODE_DESC *pDesc);
+        HRESULT FindClosestMatchingMode(
+            [in, out] DXGI_MODE_DESC *pModeToMatch,
+            [in, out] DXGI_MODE_DESC *pClosestMatch,
+            [in] IUnknown *pConcernedDevice);
+        HRESULT WaitForVBlank();
+        HRESULT TakeOwnership(
+            [in] IUnknown *pDevice,
+            [in] BOOL Exclusive);
+        void ReleaseOwnership();
+        //The following methods can only be called when this output is owned by a device.
+        HRESULT GetGammaControlCapabilities(
+            [in, out] DXGI_GAMMA_CONTROL_CAPABILITIES *pGammaCaps);
+        HRESULT SetGammaControl(
+            [in] DXGI_GAMMA_CONTROL *pArray);
+        HRESULT GetGammaControl(
+            [in, out] DXGI_GAMMA_CONTROL *pArray);
+        HRESULT SetDisplaySurface(
+            [in] IDXGISurface *pScanoutSurface);
+        HRESULT GetDisplaySurfaceData(
+            [in] IDXGISurface *pDestination);
+        HRESULT GetFrameStatistics(
+            [in, out] DXGI_FRAME_STATISTICS *pStats);
+    };
+    
+    [odl, uuid(00cddea8-939b-4b83-a340-a685226666cc)]
+    interface IDXGIOutput1 : IDXGIOutput
+    {
+        HRESULT GetDisplayModeList1(
+            [in] DXGI_FORMAT EnumFormat,
+            [in] UINT Flags,
+            [in, out] UINT *pNumModes,
+            [in, out] DXGI_MODE_DESC1 *pDesc);
+        HRESULT FindClosestMatchingMode1(
+            [in, out] DXGI_MODE_DESC1 *pModeToMatch,
+            [in, out] DXGI_MODE_DESC1 *pClosestMatch,
+            [in] IUnknown *pConcernedDevice);
+        HRESULT GetDisplaySurfaceData1(
+            [in] IDXGIResource *pDestination);
+        VBHRESULT DuplicateOutput(
+            [in] IUnknown *pDevice,
+            [in, out] IDXGIOutputDuplication **ppOutputDuplication);
+    };
+    
+    [odl, uuid(595e39d1-2724-4663-99b1-da969de28364)]
+    interface IDXGIOutput2 : IDXGIOutput1
+    {
+        BOOL SupportsOverlays();
+    };
+    
+    [odl, uuid(cafcb56c-6ac3-4889-bf47-9e23bbd260ec)]
+    interface IDXGISurface : IDXGIDeviceSubObject
+    {
+        HRESULT GetDesc(
+            [in, out] DXGI_SURFACE_DESC *pDesc);
+        HRESULT Map(
+            [in, out] DXGI_MAPPED_RECT *pLockedRect,
+            [in] UINT MapFlags);
+        HRESULT Unmap();
+    };
+    
+    [odl, uuid(8a6bb301-7e7e-41F4-a8e0-5b32f7f99b18)]
+    interface IDXGIOutput3 : IDXGIOutput2
+    {
+        HRESULT CheckOverlaySupport(
+            [in] DXGI_FORMAT EnumFormat,
+            [in] IUnknown *pConcernedDevice,
+            [out, retval] UINT *pFlags);
+    };
+    
+    [odl, uuid(dc7dca35-2196-414d-9F53-617884032a60)]
+    interface IDXGIOutput4 : IDXGIOutput3
+    {
+        HRESULT CheckOverlayColorSpaceSupport(
+            [in] DXGI_FORMAT Format,
+            [in] DXGI_COLOR_SPACE_TYPE ColorSpace,
+            [in] IUnknown *pConcernedDevice,
+            [out, retval] UINT *pFlags);
+    };
+    
+    [odl, uuid(80A07424-AB52-42EB-833C-0C42FD282D98)]
+    interface IDXGIOutput5 : IDXGIOutput4
+    {
+        VBHRESULT DuplicateOutput1(
+            [in] IUnknown *pDevice,
+            [in] UINT Flags,
+            [in] UINT SupportedFormatsCount,
+            [in] DXGI_FORMAT *pSupportedFormats,
+            [in, out] IDXGIOutputDuplication **ppOutputDuplication);
+    };
+    
+    
+    [odl, uuid(191cfac3-a341-470d-b26e-a864f428319c)]
+    interface IDXGIOutputDuplication : IDXGIObject
+    {
+        void GetDesc(
+            [in, out] DXGI_OUTDUPL_DESC *pDesc);
+        VBHRESULT AcquireNextFrame(
+            [in] UINT TimeoutInMilliseconds,
+            [in, out] DXGI_OUTDUPL_FRAME_INFO *pFrameInfo,
+            [in, out] IDXGIResource **ppDesktopResource);
+        VBHRESULT GetFrameDirtyRects(
+            [in] UINT DirtyRectsBufferSize,
+            [in, out] RECT *pDirtyRectsBuffer,
+            [in, out] UINT *pDirtyRectsBufferSizeRequired);
+        VBHRESULT GetFrameMoveRects(
+            [in] UINT MoveRectsBufferSize,
+            [in, out] DXGI_OUTDUPL_MOVE_RECT *pMoveRectBuffer,
+            [in, out] UINT *pMoveRectsBufferSizeRequired);
+        VBHRESULT GetFramePointerShape(
+            [in] UINT PointerShapeBufferSize,
+            [in, out] void *pPointerShapeBuffer,
+            [in, out] UINT *pPointerShapeBufferSizeRequired,
+            [in, out] DXGI_OUTDUPL_POINTER_SHAPE_INFO *pPointerShapeInfo);
+        HRESULT MapDesktopSurface(
+            [in, out] DXGI_MAPPED_RECT *pLockedRect);
+        HRESULT UnMapDesktopSurface();
+        VBHRESULT ReleaseFrame();
+    };
+    
+    [odl, uuid(035f3ab4-482e-4e50-b41f-8a7f8bd8960b)]
+    interface IDXGIResource : IDXGIDeviceSubObject
+    {
+        HRESULT GetSharedHandle(
+            [out, retval] HANDLE *pSharedHandle);
+        HRESULT GetUsage(
+            [in, out] DXGI_USAGE *pUsage);
+        HRESULT SetEvictionPriority(
+            [in] UINT EvictionPriority);
+        HRESULT GetEvictionPriority(
+            [out, retval] UINT *pEvictionPriority);
+    };
+    
+    [odl, uuid(54ec77fa-1377-44e6-8c32-88fd5f44c84c)]
+    interface IDXGIDevice : IDXGIObject
+    {
+        HRESULT GetAdapter(
+            [out, retval] IDXGIAdapter **pAdapter);
+        HRESULT CreateSurface(
+            [in] DXGI_SURFACE_DESC *pDesc,
+            [in] UINT NumSurfaces,
+            [in] DXGI_USAGE Usage,
+            [in] DXGI_SHARED_RESOURCE *pSharedResource,
+            [out, retval] IDXGISurface **ppSurface);
+        HRESULT QueryResourceResidency(
+            [in] IUnknown **ppResources,
+            [in, out] DXGI_RESIDENCY *pResidencyStatus,
+            [in] UINT NumResources);
+        HRESULT SetGPUThreadPriority(
+            [in] INT Priority);
+        HRESULT GetGPUThreadPriority(
+            [out, retval] INT *pPriority);
+    };
+    
+    [odl, uuid(77db970f-6276-48ba-ba28-070143b4392c)]
+    interface IDXGIDevice1 : IDXGIDevice
+    {
+        HRESULT SetMaximumFrameLatency(
+            [in] UINT MaxLatency);
+        HRESULT GetMaximumFrameLatency(
+            [out, retval] UINT *pMaxLatency);
+    };
+
+    [
+      dllname("d3d11")
+    ]
+    module ModuleD3d11 {
+        const UINT D3D11_SDK_VERSION = 7;
+    
+        [entry("D3D11CreateDevice")]
+        VBHRESULT D3D11CreateDevice(
+                [in] IUnknown *pAdapter,
+                [in] D3D_DRIVER_TYPE DriverType,
+                [in] HMODULE Software,
+                [in] D3D11_CREATE_DEVICE_FLAG Flags,
+                [in] void *pFeatureLevels,
+                [in] UINT FeatureLevels,
+                [in] UINT SDKVersion,
+                [in, out] ID3D11Device **ppDevice,
+                [in, out] D3D_FEATURE_LEVEL *pFeatureLevel,
+                [in, out] ID3D11DeviceContext **ppImmediateContext);
+    };
+    
+    [
+      dllname("dxgi")
+    ]
+    module ModuleDxgi {
+        const UINT DXGI_ERROR_INVALID_CALL              = 0x887A0001;
+        const UINT DXGI_ERROR_NOT_FOUND                 = 0x887A0002;
+        const UINT DXGI_ERROR_MORE_DATA                 = 0x887A0003;
+        const UINT DXGI_ERROR_WAS_STILL_DRAWING         = 0x887A000A;
+        const UINT DXGI_ERROR_NOT_CURRENTLY_AVAILABLE   = 0x887A0022;
+        const UINT DXGI_ERROR_ACCESS_LOST               = 0x887A0026;
+        const UINT DXGI_ERROR_WAIT_TIMEOUT              = 0x887A0027;
+        const UINT WAIT_ABANDONED                       = 0x00000080;
+        
+        const UINT DXGI_USAGE_SHADER_INPUT              = 0x00000010;
+        const UINT DXGI_USAGE_RENDER_TARGET_OUTPUT      = 0x00000020;
+        const UINT DXGI_USAGE_BACK_BUFFER               = 0x00000040;
+        const UINT DXGI_USAGE_SHARED                    = 0x00000080;
+        const UINT DXGI_USAGE_READ_ONLY                 = 0x00000100;
+        const UINT DXGI_USAGE_DISCARD_ON_PRESENT        = 0x00000200;
+        const UINT DXGI_USAGE_UNORDERED_ACCESS          = 0x00000400;
+
+        const UINT DXGI_USAGE_REMOTE_SWAPCHAIN_BUFFER   = 0x80000;  // 1 << (15 + 4)
+        const UINT DXGI_USAGE_GDI_COMPATIBLE            = 0x100000; // 1 << (16 + 4)
+        
+        const LPSTR szIID_IDXGIFactory1 = "{770aae78-f26f-4dba-a829-253c83d1b387}";
+        const LPSTR szIID_IDXGIFactory2 = "{50c83a1c-e072-4c48-87b0-3630fa36a6d0}";
+        const LPSTR szIID_ID3D11Texture2D = "{6f15aaf2-d208-4e89-9ab4-489535d34f9c}";
+        
+        [entry("CreateDXGIFactory1")]
+        HRESULT CreateDXGIFactory1(
+                [in] REFIID riid, 
+                [out, retval] IDXGIFactory1 **ppFactory);
+    };
+    
+    [dllname("ole32")]
+    module ModuleOle32
+    {
+        [entry("IIDFromString")]
+        HRESULT IIDFromString (
+                        [in] BSTR lpszGUID, 
+                        [in, out] void *pGUID);
+    }
+};
