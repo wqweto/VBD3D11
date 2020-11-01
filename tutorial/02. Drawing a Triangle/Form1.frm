@@ -168,7 +168,7 @@ Private Sub Form_Load()
         .BindFlags = D3D11_BIND_VERTEX_BUFFER
     End With
     Dim vertexSubresourceData As D3D11_SUBRESOURCE_DATA
-    vertexSubresourceData.pSysMemPtr = VarPtr(vertexData(0))
+    vertexSubresourceData.pSysMem = VarPtr(vertexData(0))
     Set m_vertexBuffer = m_d3d11Device.CreateBuffer(vertexBufferDesc, vertexSubresourceData)
     
     '--- Main Loop
@@ -240,7 +240,7 @@ End Sub
 Private Sub pvInitInputElementDesc(uEntry As D3D11_INPUT_ELEMENT_DESC, uBuffer As UcsBuffer, SemanticName As String, ByVal SemanticIndex As Long, ByVal Format As DXGI_FORMAT, ByVal InputSlot As Long, ByVal AlignedByteOffset As Long, ByVal InputSlotClass As D3D11_INPUT_CLASSIFICATION, ByVal InstanceDataStepRate As Long)
     uBuffer.Data = StrConv(SemanticName & vbNullChar, vbFromUnicode)
     With uEntry
-        .SemanticNamePtr = VarPtr(uBuffer.Data(0))
+        .SemanticName = VarPtr(uBuffer.Data(0))
         .SemanticIndex = SemanticIndex
         .Format = Format
         .InputSlot = InputSlot
