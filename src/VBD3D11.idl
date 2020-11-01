@@ -210,6 +210,27 @@ library VBD3D11
     } LARGE_INTEGER;
     
     typedef LARGE_INTEGER UINT64;
+    
+    typedef struct D3D_FLOAT2
+    {
+        FLOAT   x;
+        FLOAT   y;
+    } D3D_FLOAT2;
+
+    typedef struct D3D_FLOAT3
+    {
+        FLOAT   x;
+        FLOAT   y;
+        FLOAT   z;
+    } D3D_FLOAT3;
+    
+    typedef struct D3D_FLOAT4
+    {
+        FLOAT   x;
+        FLOAT   y;
+        FLOAT   z;
+        FLOAT   w;
+    } D3D_FLOAT4;
 
 //**********************************************************************
 //
