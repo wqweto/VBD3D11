@@ -38,12 +38,21 @@ Private m_vertexBuffer          As ID3D11Buffer
 Private m_numVerts              As Long
 Private m_stride                As Long
 Private m_offset                As Long
+Private m_constantBuffer        As ID3D11Buffer
 Private m_isRunning             As Boolean
 Private m_windowDidResize       As Boolean
 
 Private Type UcsBuffer
     Data()              As Byte
 End Type
+
+Private Type UcsConstants
+    pos(0 To 1)         As Single
+    paddingUnused0      As Single
+    paddingUnused1      As Single ' color (below) needs to be 16-byte aligned!
+    color(0 To 3)       As Single
+End Type
+Private Const sizeof_UcsConstants As Long = 32
 
 Private Sub Form_Load()
     Dim hResult         As VBHRESULT
@@ -146,20 +155,22 @@ Private Sub Form_Load()
     Set psBlob = Nothing
     
     '--- Create Input Layout
-    Dim inputElementDesc(0 To 1)  As D3D11_INPUT_ELEMENT_DESC
-    Dim nameBuffer(0 To 1) As UcsBuffer
+    Dim inputElementDesc(0 To 0)  As D3D11_INPUT_ELEMENT_DESC
+    Dim nameBuffer(0 To 0) As UcsBuffer
     pvInitInputElementDesc inputElementDesc(0), nameBuffer(0), "POS", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0
-    pvInitInputElementDesc inputElementDesc(1), nameBuffer(1), "COL", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0
     Set m_inputLayout = m_d3d11Device.CreateInputLayout(inputElementDesc(0), UBound(inputElementDesc) + 1, m_vsBlob.GetBufferPointer(), m_vsBlob.GetBufferSize())
     
     '--- Create Vertex Buffer
-    Dim vertexData() As Single '--- x, y, r, g, b, a
+    Dim vertexData() As Single '--- x, y
     pvArraySingle vertexData, _
-        0!, 0.5!, 0!, 1!, 0!, 1!, _
-        0.5!, -0.5!, 1!, 0!, 0!, 1!, _
-        -0.5!, -0.5!, 0!, 0!, 1!, 1!
-    m_stride = 6 * 4
-    m_numVerts = (UBound(vertexData) + 1) / 6
+        -0.5!, 0.5!, _
+        0.5!, -0.5!, _
+        -0.5!, -0.5!, _
+        -0.5!, 0.5!, _
+        0.5!, 0.5!, _
+        0.5!, -0.5!
+    m_stride = 2 * 4
+    m_numVerts = (UBound(vertexData) + 1) / 2
     m_offset = 0
     Dim vertexBufferDesc As D3D11_BUFFER_DESC
     With vertexBufferDesc
@@ -170,6 +181,16 @@ Private Sub Form_Load()
     Dim vertexSubresourceData As D3D11_SUBRESOURCE_DATA
     vertexSubresourceData.pSysMem = VarPtr(vertexData(0))
     Set m_vertexBuffer = m_d3d11Device.CreateBuffer(vertexBufferDesc, vertexSubresourceData)
+    
+    '--- Create Constant Buffer
+    Dim constantBufferDesc As D3D11_BUFFER_DESC
+    With constantBufferDesc
+        .ByteWidth = (sizeof_UcsConstants + &HF) And &HFFFFFFF0 '--- ByteWidth must be a multiple of 16, per the docs
+        .Usage = D3D11_USAGE_DYNAMIC
+        .BindFlags = D3D11_BIND_CONSTANT_BUFFER
+        .CPUAccessFlags = D3D11_CPU_ACCESS_WRITE
+    End With
+    Set m_constantBuffer = m_d3d11Device.CreateBuffer(constantBufferDesc, ByVal 0)
     
     '--- Main Loop
     Show
@@ -185,6 +206,18 @@ Private Sub Form_Load()
             Set d3d11FrameBuffer = Nothing
             m_windowDidResize = False
         End If
+        
+        Dim mappedSubresource As D3D11_MAPPED_SUBRESOURCE
+        m_d3d11DeviceContext.Map m_constantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, mappedSubresource
+        Dim constants As UcsConstants
+        constants.pos(0) = 0.25!
+        constants.pos(1) = 0.3!
+        constants.color(0) = 0.7!
+        constants.color(1) = 0.65!
+        constants.color(2) = 0.1!
+        constants.color(3) = 1!
+        Call CopyMemory(ByVal mappedSubresource.pData, constants, sizeof_UcsConstants)
+        m_d3d11DeviceContext.Unmap m_constantBuffer, 0
         
         Dim backgroundColor() As Single
         pvArraySingle backgroundColor, 0.1!, 0.2!, 0.6!, 1!
@@ -207,6 +240,8 @@ Private Sub Form_Load()
         
         m_d3d11DeviceContext.VSSetShader m_vertexShader, Nothing, 0
         m_d3d11DeviceContext.PSSetShader m_pixelShader, Nothing, 0
+        
+        m_d3d11DeviceContext.VSSetConstantBuffers 0, 1, m_constantBuffer
         
         m_d3d11DeviceContext.IASetVertexBuffers 0, 1, m_vertexBuffer, m_stride, m_offset
 

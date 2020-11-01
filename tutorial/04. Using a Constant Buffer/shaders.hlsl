@@ -1,26 +1,24 @@
 
-struct VS_Input
+cbuffer constants : register(b0)
 {
-    float2 pos : POS;
-    float4 color : COL;
+    float2 offset;
+    float4 uniformColor;
 };
 
-struct VS_Output
-{
-    float4 position : SV_POSITION;
-    float4 color : COL;
+struct VS_Output {
+    float4 pos : SV_POSITION;
+    float4 color : COLOR;
 };
 
-VS_Output vs_main(VS_Input input)
+VS_Output vs_main(float2 pos : POS)
 {
     VS_Output output;
-    output.position = float4(input.pos, 0.0f, 1.0f);
-    output.color = input.color;    
-
+    output.pos = float4(pos + offset, 0.0f, 1.0f);
+    output.color = uniformColor;
     return output;
 }
 
-float4 ps_main(VS_Output input) : SV_TARGET
+float4 ps_main(VS_Output input) : SV_Target
 {
-    return input.color;   
+     return input.color;   
 }
