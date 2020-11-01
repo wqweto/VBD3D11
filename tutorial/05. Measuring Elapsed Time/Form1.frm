@@ -1,14 +1,14 @@
 VERSION 5.00
 Begin VB.Form Form1 
    Caption         =   "Form1"
-   ClientHeight    =   2316
+   ClientHeight    =   6924
    ClientLeft      =   108
    ClientTop       =   456
-   ClientWidth     =   3624
+   ClientWidth     =   9924
    LinkTopic       =   "Form1"
-   ScaleHeight     =   2316
-   ScaleWidth      =   3624
-   StartUpPosition =   3  'Windows Default
+   ScaleHeight     =   6924
+   ScaleWidth      =   9924
+   StartUpPosition =   1  'CenterOwner
 End
 Attribute VB_Name = "Form1"
 Attribute VB_GlobalNameSpace = False
@@ -49,9 +49,9 @@ Private Type UcsBuffer
 End Type
 
 Private Type UcsConstants
-    pos                 As D3D_FLOAT2
-    paddingUnused       As D3D_FLOAT2 ' color (below) needs to be 16-byte aligned!
-    color               As D3D_FLOAT4
+    pos                 As XMFLOAT2
+    paddingUnused       As XMFLOAT2 ' color (below) needs to be 16-byte aligned!
+    color               As XMFLOAT4
 End Type
 Private Const sizeof_UcsConstants As Long = 32
 
@@ -221,14 +221,14 @@ Private Sub Form_Load()
         End If
         
         '--- Modulate player's y-position
-        Dim playerPos       As D3D_FLOAT2
+        Dim playerPos       As XMFLOAT2
         Const posCycleAmplitude As Single = 0.5!
         Const posCyclePeriod As Single = 3! '--- in seconds
         Const posCycleFreq  As Single = 2! * 3.141592! / posCyclePeriod
         playerPos.y = posCycleAmplitude * Sin(posCycleFreq * currentTimeInSeconds)
         
         '--- Cycle player color
-        Dim playerColor     As D3D_FLOAT4
+        Dim playerColor     As XMFLOAT4
         Const colorCyclePeriod As Single = 5!  '--- in seconds
         Const colorCycleFreq As Single = 2! * 3.141592! / colorCyclePeriod
         playerColor.x = 0.5! * (Sin(colorCycleFreq * currentTimeInSeconds) + 1!)

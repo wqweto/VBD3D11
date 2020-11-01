@@ -1,14 +1,14 @@
 VERSION 5.00
 Begin VB.Form Form1 
    Caption         =   "Form1"
-   ClientHeight    =   2316
+   ClientHeight    =   6924
    ClientLeft      =   108
    ClientTop       =   456
-   ClientWidth     =   3624
+   ClientWidth     =   9924
    LinkTopic       =   "Form1"
-   ScaleHeight     =   2316
-   ScaleWidth      =   3624
-   StartUpPosition =   3  'Windows Default
+   ScaleHeight     =   6924
+   ScaleWidth      =   9924
+   StartUpPosition =   1  'CenterOwner
 End
 Attribute VB_Name = "Form1"
 Attribute VB_GlobalNameSpace = False
@@ -51,7 +51,7 @@ Private m_offset                As Long
 Private m_constantBuffer        As ID3D11Buffer
 Private m_isRunning             As Boolean
 Private m_windowDidResize       As Boolean
-Private m_playerPos             As D3D_FLOAT2
+Private m_playerPos             As XMFLOAT2
 Private m_keyIsDown(0 To GameActionCount - 1) As Boolean
 
 Private Type UcsBuffer
@@ -59,9 +59,9 @@ Private Type UcsBuffer
 End Type
 
 Private Type UcsConstants
-    pos                 As D3D_FLOAT2
-    paddingUnused       As D3D_FLOAT2 ' color (below) needs to be 16-byte aligned!
-    color               As D3D_FLOAT4
+    pos                 As XMFLOAT2
+    paddingUnused       As XMFLOAT2 ' color (below) needs to be 16-byte aligned!
+    color               As XMFLOAT4
 End Type
 Private Const sizeof_UcsConstants As Long = 32
 
@@ -266,7 +266,7 @@ Private Sub Form_Load()
         End If
         
         '--- Cycle player color
-        Dim playerColor     As D3D_FLOAT4
+        Dim playerColor     As XMFLOAT4
         Const colorCyclePeriod As Single = 5!  '--- in seconds
         Const colorCycleFreq As Single = 2! * 3.141592! / colorCyclePeriod
         playerColor.x = 0.5! * (Sin(colorCycleFreq * currentTimeInSeconds) + 1!)

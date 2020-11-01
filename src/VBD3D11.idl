@@ -211,26 +211,32 @@ library VBD3D11
     
     typedef LARGE_INTEGER UINT64;
     
-    typedef struct D3D_FLOAT2
+//**********************************************************************
+//
+//  DierctXMath
+//
+//**********************************************************************
+
+    typedef struct XMFLOAT2
     {
         FLOAT   x;
         FLOAT   y;
-    } D3D_FLOAT2;
+    } XMFLOAT2;
 
-    typedef struct D3D_FLOAT3
+    typedef struct XMFLOAT3
     {
         FLOAT   x;
         FLOAT   y;
         FLOAT   z;
-    } D3D_FLOAT3;
+    } XMFLOAT3;
     
-    typedef struct D3D_FLOAT4
+    typedef struct XMFLOAT4
     {
         FLOAT   x;
         FLOAT   y;
         FLOAT   z;
         FLOAT   w;
-    } D3D_FLOAT4;
+    } XMFLOAT4;
 
 //**********************************************************************
 //
