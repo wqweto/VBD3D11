@@ -28,6 +28,14 @@ Private Declare Function GetClientRect Lib "user32" (ByVal hWnd As Long, lpRect 
 Private Declare Function QueryPerformanceCounter Lib "kernel32" (lpPerformanceCount As Currency) As Long
 Private Declare Function QueryPerformanceFrequency Lib "kernel32" (lpFrequency As Currency) As Long
 
+Private Enum UcsGameAction
+    GameActionMoveUp
+    GameActionMoveDown
+    GameActionMoveLeft
+    GameActionMoveRight
+    GameActionCount
+End Enum
+
 Private m_d3d11Device           As ID3D11Device1
 Private m_d3d11DeviceContext    As ID3D11DeviceContext1
 Private m_d3d11SwapChain        As IDXGISwapChain1
@@ -43,6 +51,8 @@ Private m_offset                As Long
 Private m_constantBuffer        As ID3D11Buffer
 Private m_isRunning             As Boolean
 Private m_windowDidResize       As Boolean
+Private m_playerPos             As D3D_FLOAT2
+Private m_keyIsDown(0 To GameActionCount - 1) As Boolean
 
 Private Type UcsBuffer
     Data()              As Byte
@@ -54,6 +64,23 @@ Private Type UcsConstants
     color               As D3D_FLOAT4
 End Type
 Private Const sizeof_UcsConstants As Long = 32
+
+Private Sub pvHandleKey(KeyCode As Integer, Shift As Integer, ByVal bDown As Boolean)
+    #If Shift Then
+    #End If
+    Select Case KeyCode
+    Case vbKeyEscape
+        m_isRunning = False
+    Case vbKeyW, vbKeyUp
+        m_keyIsDown(GameActionMoveUp) = bDown
+    Case vbKeyA, vbKeyLeft
+        m_keyIsDown(GameActionMoveLeft) = bDown
+    Case vbKeyS, vbKeyDown
+        m_keyIsDown(GameActionMoveDown) = bDown
+    Case vbKeyD, vbKeyRight
+        m_keyIsDown(GameActionMoveRight) = bDown
+    End Select
+End Sub
 
 Private Sub Form_Load()
     Dim hResult         As VBHRESULT
@@ -220,12 +247,23 @@ Private Sub Form_Load()
             m_windowDidResize = False
         End If
         
-        '--- Modulate player's y-position
-        Dim playerPos       As D3D_FLOAT2
-        Const posCycleAmplitude As Single = 0.5!
-        Const posCyclePeriod As Single = 3! '--- in seconds
-        Const posCycleFreq  As Single = 2! * 3.141592! / posCyclePeriod
-        playerPos.y = posCycleAmplitude * Sin(posCycleFreq * currentTimeInSeconds)
+        '--- Player movement logic
+        Dim playerSpeed     As Single
+        Dim playerMoveAmount As Single
+        playerSpeed = 1.5!
+        playerMoveAmount = playerSpeed * dt
+        If m_keyIsDown(GameActionMoveUp) Then
+            m_playerPos.y = m_playerPos.y + playerMoveAmount
+        End If
+        If m_keyIsDown(GameActionMoveDown) Then
+            m_playerPos.y = m_playerPos.y - playerMoveAmount
+        End If
+        If m_keyIsDown(GameActionMoveLeft) Then
+            m_playerPos.x = m_playerPos.x - playerMoveAmount
+        End If
+        If m_keyIsDown(GameActionMoveRight) Then
+            m_playerPos.x = m_playerPos.x + playerMoveAmount
+        End If
         
         '--- Cycle player color
         Dim playerColor     As D3D_FLOAT4
@@ -240,7 +278,7 @@ Private Sub Form_Load()
         Dim mappedSubresource As D3D11_MAPPED_SUBRESOURCE
         m_d3d11DeviceContext.Map m_constantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, mappedSubresource
         Dim constants As UcsConstants
-        constants.pos = playerPos
+        constants.pos = m_playerPos
         constants.color = playerColor
         Call CopyMemory(ByVal mappedSubresource.pData, constants, sizeof_UcsConstants)
         m_d3d11DeviceContext.Unmap m_constantBuffer, 0
@@ -279,6 +317,26 @@ Private Sub Form_Load()
     Loop
 QH:
 End Sub
+
+Private Sub Form_QueryUnload(Cancel As Integer, UnloadMode As Integer)
+    m_isRunning = False
+End Sub
+
+Private Sub Form_Resize()
+    m_windowDidResize = True
+End Sub
+
+Private Sub Form_KeyDown(KeyCode As Integer, Shift As Integer)
+    pvHandleKey KeyCode, Shift, True
+End Sub
+
+Private Sub Form_KeyUp(KeyCode As Integer, Shift As Integer)
+    pvHandleKey KeyCode, Shift, False
+End Sub
+
+'=========================================================================
+' Shared
+'=========================================================================
 
 Private Sub pvArrayLong(aDest() As Long, ParamArray A() As Variant)
     Dim lIdx            As Long
@@ -330,11 +388,3 @@ Private Property Get TimerEx() As Double
     Call QueryPerformanceCounter(cValue)
     TimerEx = cValue / cFreq
 End Property
-
-Private Sub Form_QueryUnload(Cancel As Integer, UnloadMode As Integer)
-    m_isRunning = False
-End Sub
-
-Private Sub Form_Resize()
-    m_windowDidResize = True
-End Sub
