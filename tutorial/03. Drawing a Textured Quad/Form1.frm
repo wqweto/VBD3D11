@@ -1,14 +1,14 @@
 VERSION 5.00
 Begin VB.Form Form1 
    Caption         =   "Form1"
-   ClientHeight    =   2316
+   ClientHeight    =   7560
    ClientLeft      =   108
    ClientTop       =   456
-   ClientWidth     =   3624
+   ClientWidth     =   9864
    LinkTopic       =   "Form1"
-   ScaleHeight     =   2316
-   ScaleWidth      =   3624
-   StartUpPosition =   3  'Windows Default
+   ScaleHeight     =   7560
+   ScaleWidth      =   9864
+   StartUpPosition =   1  'CenterOwner
 End
 Attribute VB_Name = "Form1"
 Attribute VB_GlobalNameSpace = False
@@ -25,6 +25,22 @@ Private Const LNG_FACILITY_WIN32                        As Long = &H80070000
 Private Declare Sub CopyMemory Lib "kernel32" Alias "RtlMoveMemory" (Destination As Any, Source As Any, ByVal Length As Long)
 Private Declare Function lstrlen Lib "kernel32" Alias "lstrlenA" (ByVal lpString As Long) As Long
 Private Declare Function GetClientRect Lib "user32" (ByVal hWnd As Long, lpRect As D3D11_RECT) As Long
+Private Declare Function GetModuleHandle Lib "kernel32" Alias "GetModuleHandleA" (ByVal lpModuleName As String) As Long
+'--- GDI+
+Private Declare Function GdiplusStartup Lib "gdiplus" (hToken As Long, pInputBuf As Any, Optional ByVal pOutputBuf As Long = 0) As Long
+Private Declare Function GdipLoadImageFromFile Lib "gdiplus" (ByVal sFilename As Long, hImage As Long) As Long
+Private Declare Function GdipDisposeImage Lib "gdiplus" (ByVal hImage As Long) As Long
+Private Declare Function GdipBitmapLockBits Lib "gdiplus" (ByVal hBitmap As Long, lpRect As Any, ByVal lFlags As Long, ByVal lPixelFormat As Long, uLockedBitmapData As BitmapData) As Long
+Private Declare Function GdipBitmapUnlockBits Lib "gdiplus" (ByVal hBitmap As Long, uLockedBitmapData As BitmapData) As Long
+
+Private Type BitmapData
+    Width               As Long
+    Height              As Long
+    Stride              As Long
+    PixelFormat         As Long
+    Scan0               As Long
+    Reserved            As Long
+End Type
 
 Private m_d3d11Device           As ID3D11Device1
 Private m_d3d11DeviceContext    As ID3D11DeviceContext1
@@ -38,6 +54,8 @@ Private m_vertexBuffer          As ID3D11Buffer
 Private m_numVerts              As Long
 Private m_stride                As Long
 Private m_offset                As Long
+Private m_samplerState          As ID3D11SamplerState
+Private m_textureView           As ID3D11ShaderResourceView
 Private m_isRunning             As Boolean
 Private m_windowDidResize       As Boolean
 
@@ -138,7 +156,7 @@ Private Sub Form_Load()
         ElseIf Not shaderCompileErrorsBlob Is Nothing Then
             errorString = pvToString(shaderCompileErrorsBlob.GetBufferPointer())
         End If
-        MsgBox errorString, vbCritical, "Shader Compiler Error"
+        MsgBox errorString, vbExclamation, "Shader Compiler Error"
         Unload Me
         GoTo QH
     End If
@@ -149,17 +167,20 @@ Private Sub Form_Load()
     Dim inputElementDesc(0 To 1)  As D3D11_INPUT_ELEMENT_DESC
     Dim nameBuffer(0 To 1) As UcsBuffer
     pvInitInputElementDesc inputElementDesc(0), nameBuffer(0), "POS", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0
-    pvInitInputElementDesc inputElementDesc(1), nameBuffer(1), "COL", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0
+    pvInitInputElementDesc inputElementDesc(1), nameBuffer(1), "TEX", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0
     Set m_inputLayout = m_d3d11Device.CreateInputLayout(inputElementDesc(0), UBound(inputElementDesc) + 1, m_vsBlob.GetBufferPointer(), m_vsBlob.GetBufferSize())
     
     '--- Create Vertex Buffer
-    Dim vertexData() As Single '--- x, y, r, g, b, a
+    Dim vertexData() As Single '--- x, y, u, v
     pvArraySingle vertexData, _
-        0!, 0.5!, 0!, 1!, 0!, 1!, _
-        0.5!, -0.5!, 1!, 0!, 0!, 1!, _
-        -0.5!, -0.5!, 0!, 0!, 1!, 1!
-    m_stride = 6 * 4
-    m_numVerts = (UBound(vertexData) + 1) / 6
+        -0.5!, 0.5!, 0!, 0!, _
+        0.5!, -0.5!, 1!, 1!, _
+        -0.5!, -0.5!, 0!, 1!, _
+        -0.5!, 0.5!, 0!, 0!, _
+        0.5!, 0.5!, 1!, 0!, _
+        0.5!, -0.5!, 1!, 1!
+    m_stride = 4 * 4
+    m_numVerts = (UBound(vertexData) + 1) / 4
     m_offset = 0
     Dim vertexBufferDesc As D3D11_BUFFER_DESC
     With vertexBufferDesc
@@ -168,8 +189,57 @@ Private Sub Form_Load()
         .BindFlags = D3D11_BIND_VERTEX_BUFFER
     End With
     Dim vertexSubresourceData As D3D11_SUBRESOURCE_DATA
-    vertexSubresourceData.pSysMemPtr = VarPtr(vertexData(0))
+    vertexSubresourceData.pSysMem = VarPtr(vertexData(0))
     Set m_vertexBuffer = m_d3d11Device.CreateBuffer(vertexBufferDesc, vertexSubresourceData)
+    
+    '--- Create Sampler State
+    Dim samplerDesc As D3D11_SAMPLER_DESC
+    With samplerDesc
+        .Filter = D3D11_FILTER_MIN_MAG_MIP_POINT
+        .AddressU = D3D11_TEXTURE_ADDRESS_BORDER
+        .AddressV = D3D11_TEXTURE_ADDRESS_BORDER
+        .AddressW = D3D11_TEXTURE_ADDRESS_BORDER
+        .BorderColor(0) = 1!
+        .BorderColor(1) = 1!
+        .BorderColor(2) = 1!
+        .BorderColor(3) = 1!
+        .ComparisonFunc = D3D11_COMPARISON_NEVER
+    End With
+    Set m_samplerState = m_d3d11Device.CreateSamplerState(samplerDesc)
+    
+    '--- Load Image
+    Dim texWidth         As Long
+    Dim texHeight        As Long
+    Dim texNumChannels   As Long
+    Dim testTextureBytes() As Byte
+    Dim texBytesPerRow   As Long
+    If Not pvLoadPng(PathCombine(App.Path, "testTexture.png"), texWidth, texHeight, texNumChannels, testTextureBytes) Then
+        MsgBox "Error loading testTexture.png", vbExclamation, "Load Image"
+        Unload Me
+        GoTo QH
+    End If
+    texBytesPerRow = texWidth * texNumChannels
+    
+    '--- Create Texture
+    Dim textureDesc     As D3D11_TEXTURE2D_DESC
+    Dim textureSubresourceData As D3D11_SUBRESOURCE_DATA
+    Dim texture         As ID3D11Texture2D
+    With textureDesc
+        .Width = texWidth
+        .Height = texHeight
+        .MipLevels = 1
+        .ArraySize = 1
+        .Format = DXGI_FORMAT_B8G8R8A8_UNORM_SRGB
+        .SampleDesc.Count = 1
+        .Usage = D3D11_USAGE_IMMUTABLE
+        .BindFlags = D3D11_BIND_SHADER_RESOURCE
+    End With
+    With textureSubresourceData
+        .pSysMem = VarPtr(testTextureBytes(0))
+        .SysMemPitch = texBytesPerRow
+    End With
+    Set texture = m_d3d11Device.CreateTexture2D(textureDesc, textureSubresourceData)
+    Set m_textureView = m_d3d11Device.CreateShaderResourceView(texture, ByVal 0)
     
     '--- Main Loop
     Show
@@ -208,6 +278,9 @@ Private Sub Form_Load()
         m_d3d11DeviceContext.VSSetShader m_vertexShader, Nothing, 0
         m_d3d11DeviceContext.PSSetShader m_pixelShader, Nothing, 0
         
+        m_d3d11DeviceContext.PSSetShaderResources 0, 1, m_textureView
+        m_d3d11DeviceContext.PSSetSamplers 0, 1, m_samplerState
+        
         m_d3d11DeviceContext.IASetVertexBuffers 0, 1, m_vertexBuffer, m_stride, m_offset
 
         m_d3d11DeviceContext.Draw m_numVerts, 0
@@ -240,7 +313,7 @@ End Sub
 Private Sub pvInitInputElementDesc(uEntry As D3D11_INPUT_ELEMENT_DESC, uBuffer As UcsBuffer, SemanticName As String, ByVal SemanticIndex As Long, ByVal Format As DXGI_FORMAT, ByVal InputSlot As Long, ByVal AlignedByteOffset As Long, ByVal InputSlotClass As D3D11_INPUT_CLASSIFICATION, ByVal InstanceDataStepRate As Long)
     uBuffer.Data = StrConv(SemanticName & vbNullChar, vbFromUnicode)
     With uEntry
-        .SemanticNamePtr = VarPtr(uBuffer.Data(0))
+        .SemanticName = VarPtr(uBuffer.Data(0))
         .SemanticIndex = SemanticIndex
         .Format = Format
         .InputSlot = InputSlot
@@ -259,6 +332,39 @@ End Function
 
 Private Function PathCombine(sPath As String, sFile As String) As String
     PathCombine = sPath & IIf(LenB(sPath) <> 0 And Right$(sPath, 1) <> "\" And LenB(sFile) <> 0, "\", vbNullString) & sFile
+End Function
+
+Private Function pvLoadPng(sFilename As String, lWidth As Long, lHeight As Long, lChannels As Long, baData() As Byte) As Boolean
+    Const ImageLockModeRead As Long = 1
+    Const PixelFormat32bppPARGB As Long = &HE200B
+    Dim aInput(0 To 3)  As Long
+    Dim hBitmap         As Long
+    Dim uData           As BitmapData
+    
+    If GetModuleHandle("gdiplus") = 0 Then
+        aInput(0) = 1
+        Call GdiplusStartup(0, aInput(0))
+    End If
+    If GdipLoadImageFromFile(StrPtr(sFilename), hBitmap) <> 0 Then
+        GoTo QH
+    End If
+    If GdipBitmapLockBits(hBitmap, ByVal 0, ImageLockModeRead, PixelFormat32bppPARGB, uData) <> 0 Then
+        GoTo QH
+    End If
+    lWidth = uData.Width
+    lHeight = uData.Height
+    lChannels = 4
+    ReDim baData(0 To uData.Stride * uData.Height - 1) As Byte
+    Call CopyMemory(baData(0), ByVal uData.Scan0, UBound(baData) + 1)
+    '--- success
+    pvLoadPng = True
+QH:
+    If uData.Scan0 <> 0 Then
+        Call GdipBitmapUnlockBits(hBitmap, uData)
+    End If
+    If hBitmap <> 0 Then
+        Call GdipDisposeImage(hBitmap)
+    End If
 End Function
 
 Private Sub Form_QueryUnload(Cancel As Integer, UnloadMode As Integer)

@@ -30,6 +30,8 @@ library VBD3D11
     interface ID3D11PixelShader;
     interface ID3D11InputLayout;
     interface ID3D11Buffer;
+    interface ID3D11SamplerState;
+    interface ID3D11ShaderResourceView;
     
     interface IDXGIObject;
     interface IDXGIDeviceSubObject;
@@ -252,21 +254,17 @@ library VBD3D11
 
     typedef void D3D11_TEXTURE1D_DESC;
     typedef void D3D11_TEXTURE3D_DESC;
-    typedef void D3D11_SHADER_RESOURCE_VIEW_DESC;
     typedef void D3D11_UNORDERED_ACCESS_VIEW_DESC;
     typedef void D3D11_DEPTH_STENCIL_VIEW_DESC;
     typedef void D3D11_SO_DECLARATION_ENTRY;
     typedef void D3D11_DEPTH_STENCIL_DESC;
-    typedef void D3D11_SAMPLER_DESC;
     typedef void D3D11_QUERY_DESC;
     typedef void D3D11_COUNTER_DESC;
     typedef void D3D11_COUNTER_INFO;
     typedef void D3D11_COUNTER_TYPE;
     typedef IUnknown ID3D11Texture1D;
     typedef IUnknown ID3D11Texture3D;
-    typedef IUnknown ID3D11ShaderResourceView;
     typedef IUnknown ID3D11ClassInstance;
-    typedef IUnknown ID3D11SamplerState;
     typedef IUnknown ID3D11GeometryShader;
     typedef IUnknown ID3D11Asynchronous;
     typedef IUnknown ID3D11Predicate;
@@ -542,6 +540,95 @@ library VBD3D11
         D3D11_INPUT_PER_VERTEX_DATA = 0,
         D3D11_INPUT_PER_INSTANCE_DATA = 1
     } D3D11_INPUT_CLASSIFICATION;
+    
+    typedef enum D3D11_FILTER
+    {
+        // Bits used in defining enumeration of valid filters:
+        // bits [1:0] - mip: 0 == point, 1 == linear, 2,3 unused
+        // bits [3:2] - mag: 0 == point, 1 == linear, 2,3 unused
+        // bits [5:4] - min: 0 == point, 1 == linear, 2,3 unused
+        // bit  [6]   - aniso
+        // bits [8:7] - reduction type: 
+        //                0 == standard filtering
+        //                1 == comparison
+        //                2 == min
+        //                3 == max
+        // bit  [31]  - mono 1-bit (narrow-purpose filter) [no longer supported in D3D11]
+
+        D3D11_FILTER_MIN_MAG_MIP_POINT                              = 0x00000000,
+        D3D11_FILTER_MIN_MAG_POINT_MIP_LINEAR                       = 0x00000001,
+        D3D11_FILTER_MIN_POINT_MAG_LINEAR_MIP_POINT                 = 0x00000004,
+        D3D11_FILTER_MIN_POINT_MAG_MIP_LINEAR                       = 0x00000005,
+        D3D11_FILTER_MIN_LINEAR_MAG_MIP_POINT                       = 0x00000010,
+        D3D11_FILTER_MIN_LINEAR_MAG_POINT_MIP_LINEAR                = 0x00000011,
+        D3D11_FILTER_MIN_MAG_LINEAR_MIP_POINT                       = 0x00000014,
+        D3D11_FILTER_MIN_MAG_MIP_LINEAR                             = 0x00000015,
+        D3D11_FILTER_ANISOTROPIC                                    = 0x00000055,
+        D3D11_FILTER_COMPARISON_MIN_MAG_MIP_POINT                   = 0x00000080,
+        D3D11_FILTER_COMPARISON_MIN_MAG_POINT_MIP_LINEAR            = 0x00000081,
+        D3D11_FILTER_COMPARISON_MIN_POINT_MAG_LINEAR_MIP_POINT      = 0x00000084,
+        D3D11_FILTER_COMPARISON_MIN_POINT_MAG_MIP_LINEAR            = 0x00000085,
+        D3D11_FILTER_COMPARISON_MIN_LINEAR_MAG_MIP_POINT            = 0x00000090,
+        D3D11_FILTER_COMPARISON_MIN_LINEAR_MAG_POINT_MIP_LINEAR     = 0x00000091,
+        D3D11_FILTER_COMPARISON_MIN_MAG_LINEAR_MIP_POINT            = 0x00000094,
+        D3D11_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR                  = 0x00000095,
+        D3D11_FILTER_COMPARISON_ANISOTROPIC                         = 0x000000d5,
+        D3D11_FILTER_MINIMUM_MIN_MAG_MIP_POINT                      = 0x00000100,
+        D3D11_FILTER_MINIMUM_MIN_MAG_POINT_MIP_LINEAR               = 0x00000101,
+        D3D11_FILTER_MINIMUM_MIN_POINT_MAG_LINEAR_MIP_POINT         = 0x00000104,
+        D3D11_FILTER_MINIMUM_MIN_POINT_MAG_MIP_LINEAR               = 0x00000105,
+        D3D11_FILTER_MINIMUM_MIN_LINEAR_MAG_MIP_POINT               = 0x00000110,
+        D3D11_FILTER_MINIMUM_MIN_LINEAR_MAG_POINT_MIP_LINEAR        = 0x00000111,
+        D3D11_FILTER_MINIMUM_MIN_MAG_LINEAR_MIP_POINT               = 0x00000114,
+        D3D11_FILTER_MINIMUM_MIN_MAG_MIP_LINEAR                     = 0x00000115,
+        D3D11_FILTER_MINIMUM_ANISOTROPIC                            = 0x00000155,
+        D3D11_FILTER_MAXIMUM_MIN_MAG_MIP_POINT                      = 0x00000180,
+        D3D11_FILTER_MAXIMUM_MIN_MAG_POINT_MIP_LINEAR               = 0x00000181,
+        D3D11_FILTER_MAXIMUM_MIN_POINT_MAG_LINEAR_MIP_POINT         = 0x00000184,
+        D3D11_FILTER_MAXIMUM_MIN_POINT_MAG_MIP_LINEAR               = 0x00000185,
+        D3D11_FILTER_MAXIMUM_MIN_LINEAR_MAG_MIP_POINT               = 0x00000190,
+        D3D11_FILTER_MAXIMUM_MIN_LINEAR_MAG_POINT_MIP_LINEAR        = 0x00000191,
+        D3D11_FILTER_MAXIMUM_MIN_MAG_LINEAR_MIP_POINT               = 0x00000194,
+        D3D11_FILTER_MAXIMUM_MIN_MAG_MIP_LINEAR                     = 0x00000195,
+        D3D11_FILTER_MAXIMUM_ANISOTROPIC                            = 0x000001d5
+    } D3D11_FILTER;
+    
+    typedef enum D3D11_TEXTURE_ADDRESS_MODE
+    {
+        D3D11_TEXTURE_ADDRESS_WRAP = 1,
+        D3D11_TEXTURE_ADDRESS_MIRROR = 2,
+        D3D11_TEXTURE_ADDRESS_CLAMP = 3,
+        D3D11_TEXTURE_ADDRESS_BORDER = 4,
+        D3D11_TEXTURE_ADDRESS_MIRROR_ONCE = 5
+    } D3D11_TEXTURE_ADDRESS_MODE;
+    
+    typedef enum D3D11_COMPARISON_FUNC
+    {
+        D3D11_COMPARISON_NEVER = 1,
+        D3D11_COMPARISON_LESS = 2,
+        D3D11_COMPARISON_EQUAL = 3,
+        D3D11_COMPARISON_LESS_EQUAL = 4,
+        D3D11_COMPARISON_GREATER = 5,
+        D3D11_COMPARISON_NOT_EQUAL = 6,
+        D3D11_COMPARISON_GREATER_EQUAL = 7,
+        D3D11_COMPARISON_ALWAYS = 8
+    } D3D11_COMPARISON_FUNC;
+
+    typedef enum D3D11_SRV_DIMENSION
+    {
+        D3D11_SRV_DIMENSION_UNKNOWN = 0,
+        D3D11_SRV_DIMENSION_BUFFER = 1,
+        D3D11_SRV_DIMENSION_TEXTURE1D = 2,
+        D3D11_SRV_DIMENSION_TEXTURE1DARRAY = 3,
+        D3D11_SRV_DIMENSION_TEXTURE2D = 4,
+        D3D11_SRV_DIMENSION_TEXTURE2DARRAY = 5,
+        D3D11_SRV_DIMENSION_TEXTURE2DMS = 6,
+        D3D11_SRV_DIMENSION_TEXTURE2DMSARRAY = 7,
+        D3D11_SRV_DIMENSION_TEXTURE3D = 8,
+        D3D11_SRV_DIMENSION_TEXTURECUBE = 9,
+        D3D11_SRV_DIMENSION_TEXTURECUBEARRAY = 10,
+        D3D11_SRV_DIMENSION_BUFFEREX = 11,
+    } D3D11_SRV_DIMENSION;
 
     typedef struct D3D11_RECT {
         long    Left;
@@ -578,7 +665,7 @@ library VBD3D11
 
     typedef struct D3D11_SUBRESOURCE_DATA
     {
-        LPVOID  pSysMemPtr;
+        LPVOID  pSysMem;
         UINT    SysMemPitch;
         UINT    SysMemSlicePitch;
     } D3D11_SUBRESOURCE_DATA;
@@ -599,7 +686,7 @@ library VBD3D11
     
     typedef struct D3D11_MAPPED_SUBRESOURCE
     {
-        LPVOID  pDataPtr;
+        LPVOID  pData;
         UINT    RowPitch;
         UINT    DepthPitch;
     } D3D11_MAPPED_SUBRESOURCE;
@@ -736,7 +823,7 @@ library VBD3D11
     
     typedef struct D3D11_INPUT_ELEMENT_DESC
     {
-        LPVOID SemanticNamePtr;
+        LPVOID SemanticName;
         UINT SemanticIndex;
         DXGI_FORMAT Format;
         UINT InputSlot;
@@ -754,6 +841,49 @@ library VBD3D11
         UINT MiscFlags;
         UINT StructureByteStride; // Stride of Structured Buffer; ignored if STRUCTURED MiscFlag not set
     } D3D11_BUFFER_DESC;
+    
+    typedef struct D3D11_SAMPLER_DESC
+    {
+        D3D11_FILTER Filter;
+        D3D11_TEXTURE_ADDRESS_MODE AddressU;
+        D3D11_TEXTURE_ADDRESS_MODE AddressV;
+        D3D11_TEXTURE_ADDRESS_MODE AddressW;
+        FLOAT MipLODBias;
+        UINT MaxAnisotropy;
+        D3D11_COMPARISON_FUNC ComparisonFunc;
+        FLOAT BorderColor[4]; // RGBA
+        FLOAT MinLOD;
+        FLOAT MaxLOD;
+    } D3D11_SAMPLER_DESC;
+    
+    typedef struct D3D11_TEX2D_ARRAY_SRV
+    {
+        UINT MostDetailedMip;
+        UINT MipLevels;
+        UINT FirstArraySlice;
+        UINT ArraySize;
+    } D3D11_TEX2D_ARRAY_SRV;
+    
+    typedef struct D3D11_SHADER_RESOURCE_VIEW_DESC
+    {
+        DXGI_FORMAT Format;
+        D3D11_SRV_DIMENSION ViewDimension;
+
+        //union
+        //{
+        //    D3D11_BUFFER_SRV Buffer;
+        //    D3D11_TEX1D_SRV Texture1D;
+        //    D3D11_TEX1D_ARRAY_SRV Texture1DArray;
+        //    D3D11_TEX2D_SRV Texture2D;
+            D3D11_TEX2D_ARRAY_SRV Texture2DArray;
+        //    D3D11_TEX2DMS_SRV Texture2DMS;
+        //    D3D11_TEX2DMS_ARRAY_SRV Texture2DMSArray;
+        //    D3D11_TEX3D_SRV Texture3D;
+        //    D3D11_TEXCUBE_SRV TextureCube;
+        //    D3D11_TEXCUBE_ARRAY_SRV TextureCubeArray;
+        //    D3D11_BUFFEREX_SRV BufferEx;
+        //};
+    } D3D11_SHADER_RESOURCE_VIEW_DESC;
 
     [odl, uuid(db6f6ddb-ac77-4e88-8253-819df9bbf140)]
     interface ID3D11Device : IUnknown {
@@ -775,7 +905,7 @@ library VBD3D11
             [out, retval] ID3D11Texture3D **ppTexture3D);
         HRESULT CreateShaderResourceView(
             [in] ID3D11Resource *pResource,
-            [in] D3D11_SHADER_RESOURCE_VIEW_DESC *pDesc,
+            [in] void *pDesc,
             [out, retval] ID3D11ShaderResourceView **ppSRView);
         HRESULT CreateUnorderedAccessView(
             [in] ID3D11Resource *pResource,
@@ -1671,6 +1801,19 @@ library VBD3D11
             [in, out] D3D11_BUFFER_DESC *pDesc);
     };
 
+    [odl, uuid(da6fea51-564c-4487-9810-f0d0f9b4e3a5)]
+    interface ID3D11SamplerState : ID3D11DeviceChild
+    {
+        void GetDesc(
+            [in, out] D3D11_SAMPLER_DESC* pDesc);
+    };
+    
+    [odl, uuid(b0e06fe0-8192-4e1a-b1ca-36d7414710b2)]
+    interface ID3D11ShaderResourceView : ID3D11View
+    {
+        void GetDesc(
+            [in, out] D3D11_SHADER_RESOURCE_VIEW_DESC* pDesc);
+    };
 
 
 //**********************************************************************
@@ -1797,7 +1940,7 @@ library VBD3D11
     typedef struct DXGI_MAPPED_RECT
     {
         INT     Pitch;
-        LPVOID  pBitsPtr;
+        LPVOID  pBits;
     } DXGI_MAPPED_RECT;
     
     typedef [public] D3DCOLORVALUE DXGI_RGBA;
