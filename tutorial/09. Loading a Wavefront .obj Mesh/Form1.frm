@@ -254,59 +254,88 @@ Private Sub pvMainLoop()
     Set psBlob = Nothing
     
     '--- Create Input Layout
-    Dim inputElementDesc(0 To 0)  As D3D11_INPUT_ELEMENT_DESC
-    Dim nameBuffer(0 To 0) As UcsBufferType
+    Dim inputElementDesc(0 To 1)  As D3D11_INPUT_ELEMENT_DESC
+    Dim nameBuffer(0 To 1) As UcsBufferType
     pvInitInputElementDesc inputElementDesc(0), nameBuffer(0), "POS", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0
+    pvInitInputElementDesc inputElementDesc(1), nameBuffer(0), "TEX", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0
     Set m_inputLayout = m_d3d11Device.CreateInputLayout(inputElementDesc(0), UBound(inputElementDesc) + 1, m_vsBlob.GetBufferPointer(), m_vsBlob.GetBufferSize())
     
     '--- Create Vertex and Index Buffer
-    Dim vertexData() As Single '--- x, y, z
-    pvArraySingle vertexData, _
-        -0.5!, -0.5!, -0.5!, _
-        -0.5!, -0.5!, 0.5!, _
-        -0.5!, 0.5!, -0.5!, _
-        -0.5!, 0.5!, 0.5!, _
-        0.5!, -0.5!, -0.5!, _
-        0.5!, -0.5!, 0.5!, _
-        0.5!, 0.5!, -0.5!, _
-        0.5!, 0.5!, 0.5!
-    Dim indices() As Integer
-    pvArrayInteger indices, _
-        0, 6, 4, _
-        0, 2, 6, _
-        0, 3, 2, _
-        0, 1, 3, _
-        2, 7, 6, _
-        2, 3, 7, _
-        4, 6, 7, _
-        4, 7, 5, _
-        0, 4, 5, _
-        0, 5, 1, _
-        1, 5, 7, _
-        1, 7, 3
-    m_stride = 3 * sizeof_Single
-'    m_numVerts = (UBound(vertexData) + 1) * sizeof_Single / m_stride
+    Dim obj As UcsLoadedObjType
+    obj = LoadObj(PathCombine(App.Path, "cube.obj"))
+    m_stride = Len(obj.vertexBuffer(0))
+    'm_numVerts = obj.numVertexes
     m_offset = 0
-    m_numIndices = UBound(indices) + 1
+    m_numIndices = obj.numIndices
+    
     Dim vertexBufferDesc As D3D11_BUFFER_DESC
     With vertexBufferDesc
-        .ByteWidth = (UBound(vertexData) + 1) * sizeof_Single
+        .ByteWidth = obj.numVertexes * Len(obj.vertexBuffer(0))
         .Usage = D3D11_USAGE_IMMUTABLE
         .BindFlags = D3D11_BIND_VERTEX_BUFFER
     End With
     Dim vertexSubresourceData As D3D11_SUBRESOURCE_DATA
-    vertexSubresourceData.pSysMem = VarPtr(vertexData(0))
+    vertexSubresourceData.pSysMem = VarPtr(obj.vertexBuffer(0))
     Set m_vertexBuffer = m_d3d11Device.CreateBuffer(vertexBufferDesc, vertexSubresourceData)
     
     Dim indexBufferDesc  As D3D11_BUFFER_DESC
     With indexBufferDesc
-        .ByteWidth = (UBound(indices) + 1) * sizeof_Integer
+        .ByteWidth = obj.numIndices * sizeof_Integer
         .Usage = D3D11_USAGE_IMMUTABLE
         .BindFlags = D3D11_BIND_INDEX_BUFFER
     End With
     Dim indexSubresourceData As D3D11_SUBRESOURCE_DATA
-    indexSubresourceData.pSysMem = VarPtr(indices(0))
+    indexSubresourceData.pSysMem = VarPtr(obj.indexBuffer(0))
     Set m_indexBuffer = m_d3d11Device.CreateBuffer(indexBufferDesc, indexSubresourceData)
+    
+    '--- Create Sampler State
+    Dim samplerDesc As D3D11_SAMPLER_DESC
+    With samplerDesc
+        .Filter = D3D11_FILTER_MIN_MAG_MIP_POINT
+        .AddressU = D3D11_TEXTURE_ADDRESS_BORDER
+        .AddressV = D3D11_TEXTURE_ADDRESS_BORDER
+        .AddressW = D3D11_TEXTURE_ADDRESS_BORDER
+        .BorderColor(0) = 1!
+        .BorderColor(1) = 1!
+        .BorderColor(2) = 1!
+        .BorderColor(3) = 1!
+        .ComparisonFunc = D3D11_COMPARISON_NEVER
+    End With
+    Set m_samplerState = m_d3d11Device.CreateSamplerState(samplerDesc)
+    
+    '--- Load Image
+    Dim texWidth         As Long
+    Dim texHeight        As Long
+    Dim texNumChannels   As Long
+    Dim testTextureBytes() As Byte
+    Dim texBytesPerRow   As Long
+    If Not LoadPng(PathCombine(App.Path, "test.png"), texWidth, texHeight, texNumChannels, testTextureBytes) Then
+        MsgBox "Error loading test.png", vbExclamation, "Load Image"
+        Unload Me
+        GoTo QH
+    End If
+    texBytesPerRow = texWidth * texNumChannels
+    
+    '--- Create Texture
+    Dim textureDesc     As D3D11_TEXTURE2D_DESC
+    Dim textureSubresourceData As D3D11_SUBRESOURCE_DATA
+    Dim texture         As ID3D11Texture2D
+    With textureDesc
+        .Width = texWidth
+        .Height = texHeight
+        .MipLevels = 1
+        .ArraySize = 1
+        .Format = DXGI_FORMAT_B8G8R8A8_UNORM_SRGB
+        .SampleDesc.Count = 1
+        .Usage = D3D11_USAGE_IMMUTABLE
+        .BindFlags = D3D11_BIND_SHADER_RESOURCE
+    End With
+    With textureSubresourceData
+        .pSysMem = VarPtr(testTextureBytes(0))
+        .SysMemPitch = texBytesPerRow
+    End With
+    Set texture = m_d3d11Device.CreateTexture2D(textureDesc, textureSubresourceData)
+    Set m_textureView = m_d3d11Device.CreateShaderResourceView(texture, ByVal 0)
     
     '--- Create Constant Buffer
     Dim constantBufferDesc As D3D11_BUFFER_DESC
@@ -489,12 +518,11 @@ Private Sub pvMainLoop()
         m_d3d11DeviceContext.IASetInputLayout m_inputLayout
         
         m_d3d11DeviceContext.VSSetShader m_vertexShader, Nothing, 0
-        m_d3d11DeviceContext.PSSetShader m_pixelShader, Nothing, 0
+        m_d3d11DeviceContext.VSSetConstantBuffers 0, 1, m_constantBuffer
         
+        m_d3d11DeviceContext.PSSetShader m_pixelShader, Nothing, 0
         m_d3d11DeviceContext.PSSetShaderResources 0, 1, m_textureView
         m_d3d11DeviceContext.PSSetSamplers 0, 1, m_samplerState
-        
-        m_d3d11DeviceContext.VSSetConstantBuffers 0, 1, m_constantBuffer
         
         m_d3d11DeviceContext.IASetVertexBuffers 0, 1, m_vertexBuffer, m_stride, m_offset
         m_d3d11DeviceContext.IASetIndexBuffer m_indexBuffer, DXGI_FORMAT_R16_UINT, 0
@@ -516,15 +544,6 @@ Private Sub pvArrayLong(aDest() As Long, ParamArray a() As Variant)
     Dim lIdx            As Long
     
     ReDim aDest(0 To UBound(a)) As Long
-    For lIdx = 0 To UBound(a)
-        aDest(lIdx) = a(lIdx)
-    Next
-End Sub
-
-Private Sub pvArrayInteger(aDest() As Integer, ParamArray a() As Variant)
-    Dim lIdx            As Long
-    
-    ReDim aDest(0 To UBound(a)) As Integer
     For lIdx = 0 To UBound(a)
         aDest(lIdx) = a(lIdx)
     Next

@@ -6,23 +6,27 @@ cbuffer constants : register(b0)
 
 struct VS_Input {
     float3 pos : POS;
+    float2 uv : TEX;
 };
 
 struct VS_Output {
     float4 pos : SV_POSITION;
-    float3 color : COLOR;
+    float2 uv : TEXCOORD;
 };
+
+Texture2D    mytexture : register(t0);
+SamplerState mysampler : register(s0);
 
 VS_Output vs_main(VS_Input input)
 {
     VS_Output output;
     output.pos = mul(float4(input.pos, 1.0f), modelViewProj);
     // This is just a dumb bit of maths to color our unit cube nicely
-    output.color = input.pos + float3(0.5f, 0.5f, 0.5f);
+    output.uv = input.uv;
     return output;
 }
 
 float4 ps_main(VS_Output input) : SV_Target
 {
-    return float4(abs(input.color), 1.0); 
+    return mytexture.Sample(mysampler, input.uv);   
 }
