@@ -470,7 +470,7 @@ Private Sub Form_Load()
             XmRotateXMat(-m_cameraPitch))
         
         '--- Update the forward vector we use for camera movement:
-        m_cameraFwd = XmMake3(viewMat.m(0, 2), viewMat.m(1, 2), -viewMat.m(2, 2))
+        m_cameraFwd = XmMake3(viewMat.m(2, 0), viewMat.m(2, 1), -viewMat.m(2, 2))
 
         '--- Spin the quad
         Dim modelMat As XMMATRIX

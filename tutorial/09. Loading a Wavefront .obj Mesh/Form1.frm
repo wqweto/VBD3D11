@@ -396,6 +396,7 @@ Private Sub pvMainLoop()
         If m_windowDidResize Then
             m_d3d11DeviceContext.OMSetRenderTargets 0, Nothing, Nothing
             Set m_d3d11FrameBufferView = Nothing
+            Set m_depthBufferView = Nothing
             m_d3d11SwapChain.ResizeBuffers 0, 0, 0, DXGI_FORMAT_UNKNOWN, 0
             
             pvCreateD3D11RenderTargets m_d3d11Device, m_d3d11SwapChain, m_d3d11FrameBufferView, m_depthBufferView
@@ -478,7 +479,7 @@ Private Sub pvMainLoop()
             XmRotateXMat(-m_cameraPitch))
         
         '--- Update the forward vector we use for camera movement:
-        m_cameraFwd = XmMake3(viewMat.m(0, 2), viewMat.m(1, 2), -viewMat.m(2, 2))
+        m_cameraFwd = XmMake3(viewMat.m(2, 0), viewMat.m(2, 1), -viewMat.m(2, 2))
 
         '--- Spin the cube
         Dim modelMat As XMMATRIX
@@ -518,9 +519,10 @@ Private Sub pvMainLoop()
         m_d3d11DeviceContext.IASetInputLayout m_inputLayout
         
         m_d3d11DeviceContext.VSSetShader m_vertexShader, Nothing, 0
+        m_d3d11DeviceContext.PSSetShader m_pixelShader, Nothing, 0
+        
         m_d3d11DeviceContext.VSSetConstantBuffers 0, 1, m_constantBuffer
         
-        m_d3d11DeviceContext.PSSetShader m_pixelShader, Nothing, 0
         m_d3d11DeviceContext.PSSetShaderResources 0, 1, m_textureView
         m_d3d11DeviceContext.PSSetSamplers 0, 1, m_samplerState
         
