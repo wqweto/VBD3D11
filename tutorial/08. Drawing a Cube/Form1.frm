@@ -20,6 +20,10 @@ DefObj A-Z
 
 #Const DebugBuild = True
 
+'=========================================================================
+' API
+'=========================================================================
+
 Private Const ERROR_FILE_NOT_FOUND                      As Long = 2
 Private Const LNG_FACILITY_WIN32                        As Long = &H80070000
 
@@ -29,7 +33,11 @@ Private Declare Function GetClientRect Lib "user32" (ByVal hWnd As Long, lpRect 
 Private Declare Function QueryPerformanceCounter Lib "kernel32" (lpPerformanceCount As Currency) As Long
 Private Declare Function QueryPerformanceFrequency Lib "kernel32" (lpFrequency As Currency) As Long
 
-Private Enum UcsGameAction
+'=========================================================================
+' Enums
+'=========================================================================
+
+Private Enum UcsGameActionEnum
     GameActionMoveCamFwd
     GameActionMoveCamBack
     GameActionMoveCamLeft
@@ -42,6 +50,14 @@ Private Enum UcsGameAction
     GameActionLowerCam
     GameActionCount
 End Enum
+
+'=========================================================================
+' Constants and member variables
+'=========================================================================
+
+Private Const sizeof_Single         As Long = 4
+Private Const sizeof_UcsConstants   As Long = 16 * sizeof_Single
+Private Const sizeof_Integer        As Long = 2
 
 Private m_d3d11Device           As ID3D11Device1
 Private m_d3d11DeviceContext    As ID3D11DeviceContext1
@@ -73,16 +89,17 @@ Private m_isRunning             As Boolean
 Private m_windowDidResize       As Boolean
 Private m_keyIsDown(0 To GameActionCount - 1) As Boolean
 
-Private Type UcsBuffer
+Private Type UcsBufferType
     Data()              As Byte
 End Type
 
-Private Type UcsConstants
+Private Type UcsConstantsType
     modelViewProj       As XMMATRIX
 End Type
-Private Const sizeof_Single         As Long = 4
-Private Const sizeof_UcsConstants   As Long = 16 * sizeof_Single
-Private Const sizeof_Integer        As Long = 2
+
+'=========================================================================
+' Methods
+'=========================================================================
 
 Private Sub pvHandleKey(KeyCode As Integer, Shift As Integer, ByVal bDown As Boolean)
     #If Shift Then
@@ -135,7 +152,7 @@ Private Sub pvCreateD3D11RenderTargets( _
     Set depthBufferView = d3d11Device.CreateDepthStencilView(depthBuffer, ByVal 0)
 End Sub
 
-Private Sub Form_Load()
+Private Sub pvMainLoop()
     Dim hResult         As VBHRESULT
     Dim aGUID(0 To 3)   As Long
     
@@ -154,7 +171,7 @@ Private Sub Form_Load()
         Err.Raise hResult, "D3D11CreateDevice"
     End If
     
-#If DebugBuild Then
+#If DebugBuild And False Then
     '--- Set up debug layer to break on D3D11 errors
     Dim d3dDebug        As ID3D11Debug
     Dim d3dInfoQueue    As ID3D11InfoQueue
@@ -167,7 +184,7 @@ Private Sub Form_Load()
     End If
     Set d3dDebug = Nothing
 #End If
-    
+
     '--- Create Swap Chain
     Dim dxgiFactory     As IDXGIFactory2
     Dim dxgiDevice      As IDXGIDevice1
@@ -185,7 +202,7 @@ Private Sub Form_Load()
         .Width = 0 '--- use window width
         .Height = 0 '--- use window height
         .Format = DXGI_FORMAT_B8G8R8A8_UNORM_SRGB
-        .SampleDesc.Count = 1
+        .SampleDesc.Count = 2
         .SampleDesc.Quality = 0
         .BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT
         .BufferCount = 2
@@ -238,7 +255,7 @@ Private Sub Form_Load()
     
     '--- Create Input Layout
     Dim inputElementDesc(0 To 0)  As D3D11_INPUT_ELEMENT_DESC
-    Dim nameBuffer(0 To 0) As UcsBuffer
+    Dim nameBuffer(0 To 0) As UcsBufferType
     pvInitInputElementDesc inputElementDesc(0), nameBuffer(0), "POS", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0
     Set m_inputLayout = m_d3d11Device.CreateInputLayout(inputElementDesc(0), UBound(inputElementDesc) + 1, m_vsBlob.GetBufferPointer(), m_vsBlob.GetBufferSize())
     
@@ -306,6 +323,7 @@ Private Sub Form_Load()
         .FillMode = D3D11_FILL_SOLID
         .CullMode = D3D11_CULL_NONE
         .FrontCounterClockwise = 1
+        .MultisampleEnable = 1
     End With
     Set m_rasterizerState = m_d3d11Device.CreateRasterizerState(rasterizerDesc)
     
@@ -358,8 +376,8 @@ Private Sub Form_Load()
         End If
         
         '--- Update camera
-        Dim camFwdXZ As XMFLOAT3
-        Dim cameraRightXZ As XMFLOAT3
+        Dim camFwdXZ        As XMFLOAT3
+        Dim cameraRightXZ   As XMFLOAT3
         camFwdXZ = XmNormalize(XmMake3(m_cameraFwd.x, 0, m_cameraFwd.z))
         cameraRightXZ = XmCross(camFwdXZ, XmMake3(0, 1, 0))
 
@@ -449,7 +467,7 @@ Private Sub Form_Load()
         '--- Update constant buffer
         Dim mappedSubresource As D3D11_MAPPED_SUBRESOURCE
         m_d3d11DeviceContext.Map m_constantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, mappedSubresource
-        Dim constants As UcsConstants
+        Dim constants As UcsConstantsType
         constants.modelViewProj = modelViewProj
         Call CopyMemory(ByVal mappedSubresource.pData, constants, sizeof_UcsConstants)
         m_d3d11DeviceContext.Unmap m_constantBuffer, 0
@@ -459,7 +477,7 @@ Private Sub Form_Load()
         m_d3d11DeviceContext.ClearRenderTargetView m_d3d11FrameBufferView, backgroundColor(0)
         m_d3d11DeviceContext.ClearDepthStencilView m_depthBufferView, D3D11_CLEAR_DEPTH, 1!, 0
         
-        Dim viewport As D3D11_VIEWPORT
+        Dim viewport    As D3D11_VIEWPORT
         pvInitViewport viewport, 0, 0, windowWidth, windowHeight, 0, 1
         m_d3d11DeviceContext.RSSetViewports 1, viewport
         m_d3d11DeviceContext.RSSetState m_rasterizerState
@@ -488,22 +506,6 @@ Private Sub Form_Load()
         DoEvents
     Loop
 QH:
-End Sub
-
-Private Sub Form_QueryUnload(Cancel As Integer, UnloadMode As Integer)
-    m_isRunning = False
-End Sub
-
-Private Sub Form_Resize()
-    m_windowDidResize = True
-End Sub
-
-Private Sub Form_KeyDown(KeyCode As Integer, Shift As Integer)
-    pvHandleKey KeyCode, Shift, True
-End Sub
-
-Private Sub Form_KeyUp(KeyCode As Integer, Shift As Integer)
-    pvHandleKey KeyCode, Shift, False
 End Sub
 
 '=========================================================================
@@ -537,7 +539,7 @@ Private Sub pvArraySingle(aDest() As Single, ParamArray a() As Variant)
     Next
 End Sub
 
-Private Sub pvInitInputElementDesc(uEntry As D3D11_INPUT_ELEMENT_DESC, uBuffer As UcsBuffer, SemanticName As String, ByVal SemanticIndex As Long, ByVal Format As DXGI_FORMAT, ByVal InputSlot As Long, ByVal AlignedByteOffset As Long, ByVal InputSlotClass As D3D11_INPUT_CLASSIFICATION, ByVal InstanceDataStepRate As Long)
+Private Sub pvInitInputElementDesc(uEntry As D3D11_INPUT_ELEMENT_DESC, uBuffer As UcsBufferType, SemanticName As String, ByVal SemanticIndex As Long, ByVal Format As DXGI_FORMAT, ByVal InputSlot As Long, ByVal AlignedByteOffset As Long, ByVal InputSlotClass As D3D11_INPUT_CLASSIFICATION, ByVal InstanceDataStepRate As Long)
     uBuffer.Data = StrConv(SemanticName & vbNullChar, vbFromUnicode)
     With uEntry
         .SemanticName = VarPtr(uBuffer.Data(0))
@@ -580,3 +582,27 @@ Private Property Get TimerEx() As Double
     Call QueryPerformanceCounter(cValue)
     TimerEx = cValue / cFreq
 End Property
+
+'=========================================================================
+' Control events
+'=========================================================================
+
+Private Sub Form_Load()
+    pvMainLoop
+End Sub
+
+Private Sub Form_QueryUnload(Cancel As Integer, UnloadMode As Integer)
+    m_isRunning = False
+End Sub
+
+Private Sub Form_Resize()
+    m_windowDidResize = True
+End Sub
+
+Private Sub Form_KeyDown(KeyCode As Integer, Shift As Integer)
+    pvHandleKey KeyCode, Shift, True
+End Sub
+
+Private Sub Form_KeyUp(KeyCode As Integer, Shift As Integer)
+    pvHandleKey KeyCode, Shift, False
+End Sub
