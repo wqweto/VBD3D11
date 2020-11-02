@@ -252,6 +252,11 @@ library VBD3D11
         FLOAT   w;
     } XMFLOAT4;
     
+    typedef struct XMFLOAT3X3
+    {
+        FLOAT   m[3][4];
+    } XMFLOAT3X3;
+    
     typedef struct XMMATRIX 
     {
         FLOAT   m[4][4];

@@ -8,11 +8,20 @@ Public Function DegreesToRadians(ByVal sngDegs As Single) As Single
     DegreesToRadians = sngDegs * (M_PI / 180!)
 End Function
 
-Public Function XmMake3(ByVal x As Single, ByVal y As Single, ByVal z As Single) As XMFLOAT3
-    With XmMake3
+Public Function XmMake(ByVal x As Single, ByVal y As Single, ByVal z As Single) As XMFLOAT3
+    With XmMake
         .x = x
         .y = y
         .z = z
+    End With
+End Function
+
+Public Function XmMake4(ByVal x As Single, ByVal y As Single, ByVal z As Single, ByVal w As Single) As XMFLOAT4
+    With XmMake4
+        .x = x
+        .y = y
+        .z = z
+        .w = w
     End With
 End Function
 
@@ -22,22 +31,41 @@ Public Function XmLength(uV As XMFLOAT3) As Single
     End With
 End Function
 
-Public Function XmDot(uA As XMFLOAT4, uB As XMFLOAT4) As Single
-    With uA
-        XmDot = .x * uB.x + .y * uB.y + .z * uB.z + .w * uB.w
-    End With
-End Function
-
 Public Function XmScalarMul(uV As XMFLOAT3, ByVal sngF As Single) As XMFLOAT3
-    With uV
-        XmScalarMul.x = .x * sngF
-        XmScalarMul.y = .y * sngF
-        XmScalarMul.z = .z * sngF
+    With XmScalarMul
+        .x = uV.x * sngF
+        .y = uV.y * sngF
+        .z = uV.z * sngF
     End With
 End Function
 
 Public Function XmNormalize(uV As XMFLOAT3) As XMFLOAT3
     XmNormalize = XmScalarMul(uV, 1! / XmLength(uV))
+End Function
+
+Public Function XmLength4(uV As XMFLOAT4) As Single
+    With uV
+        XmLength4 = Sqr(.x * .x + .y * .y + .z * .z + .w * .w)
+    End With
+End Function
+
+Public Function XmScalarMul4(uV As XMFLOAT4, ByVal sngF As Single) As XMFLOAT4
+    With XmScalarMul4
+        .x = uV.x * sngF
+        .y = uV.y * sngF
+        .z = uV.z * sngF
+        .w = uV.w * sngF
+    End With
+End Function
+
+Public Function XmNormalize4(uV As XMFLOAT4) As XMFLOAT4
+    XmNormalize4 = XmScalarMul4(uV, 1! / XmLength4(uV))
+End Function
+
+Public Function XmDot(uA As XMFLOAT4, uB As XMFLOAT4) As Single
+    With uA
+        XmDot = .x * uB.x + .y * uB.y + .z * uB.z + .w * uB.w
+    End With
 End Function
 
 Public Function XmCross(uA As XMFLOAT3, uB As XMFLOAT3) As XMFLOAT3
@@ -69,6 +97,15 @@ Public Function XmNeg(uA As XMFLOAT3) As XMFLOAT3
         XmNeg.x = -.x
         XmNeg.y = -.y
         XmNeg.z = -.z
+    End With
+End Function
+
+Public Function XmScaleMat(ByVal sngScale As Single) As XMMATRIX
+    With XmScaleMat
+        .m(0, 0) = sngScale
+                            .m(1, 1) = sngScale
+                                                .m(2, 2) = sngScale
+                                                                    .m(3, 3) = 1
     End With
 End Function
 
@@ -179,5 +216,39 @@ Public Function XmMulMat(uA As XMMATRIX, uB As XMMATRIX) As XMMATRIX
         .m(1, 3) = XmDot(uRow1, uCol)
         .m(2, 3) = XmDot(uRow2, uCol)
         .m(3, 3) = XmDot(uRow3, uCol)
+    End With
+End Function
+
+Public Function XmMul4(uA As XMFLOAT4, uB As XMMATRIX) As XMFLOAT4
+    With XmMul4
+        .x = XmDot(uA, XmColMat(uB, 0))
+        .y = XmDot(uA, XmColMat(uB, 1))
+        .z = XmDot(uA, XmColMat(uB, 2))
+        .w = XmDot(uA, XmColMat(uB, 3))
+    End With
+End Function
+
+Public Function XmTransposeMat(uA As XMMATRIX) As XMMATRIX
+    With XmTransposeMat
+        .m(0, 0) = uA.m(0, 0): .m(1, 0) = uA.m(0, 1): .m(2, 0) = uA.m(0, 2): .m(3, 0) = uA.m(0, 3)
+        .m(0, 1) = uA.m(1, 0): .m(1, 1) = uA.m(1, 1): .m(2, 1) = uA.m(1, 2): .m(3, 1) = uA.m(1, 3)
+        .m(0, 2) = uA.m(2, 0): .m(1, 2) = uA.m(2, 1): .m(2, 2) = uA.m(2, 2): .m(3, 2) = uA.m(2, 3)
+        .m(0, 3) = uA.m(3, 0): .m(1, 3) = uA.m(3, 1): .m(2, 3) = uA.m(3, 2): .m(3, 3) = uA.m(3, 3)
+    End With
+End Function
+
+Public Function XmMatToFloat3x3(uA As XMMATRIX) As XMFLOAT3X3
+    With XmMatToFloat3x3
+        .m(0, 0) = uA.m(0, 0): .m(1, 0) = uA.m(1, 0): .m(2, 0) = uA.m(2, 0)
+        .m(0, 1) = uA.m(0, 1): .m(1, 1) = uA.m(1, 1): .m(2, 1) = uA.m(2, 1)
+        .m(0, 2) = uA.m(0, 2): .m(1, 2) = uA.m(1, 2): .m(2, 2) = uA.m(2, 2)
+    End With
+End Function
+
+Public Function XmToFloat3(uA As XMFLOAT4) As XMFLOAT3
+    With XmToFloat3
+        .x = uA.x
+        .y = uA.y
+        .z = uA.z
     End With
 End Function

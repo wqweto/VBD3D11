@@ -4,10 +4,11 @@ Option Explicit
 Private Const EPSILON           As Single = 0.0001
 
 Public Type UcsVertexDataType
-    pos(0 To 3)         As Single
-    uv(0 To 1)          As Single
-    norm(0 To 3)        As Single
+    pos(0 To 2)         As Single
+    uV(0 To 1)          As Single
+    norm(0 To 2)        As Single
 End Type
+Public Const sizeof_UcsVertexDataType As Long = (3 + 2 + 3) * 4
 
 Public Type UcsLoadedObjType
     numVertexes         As Long
@@ -108,8 +109,8 @@ Private Sub pvAssignData(uData As UcsVertexDataType, vPos As Variant, vTexCoords
         .pos(0) = vPos(0)
         .pos(1) = vPos(1)
         .pos(2) = vPos(2)
-        .uv(0) = vTexCoords(0)
-        .uv(1) = vTexCoords(1)
+        .uV(0) = vTexCoords(0)
+        .uV(1) = vTexCoords(1)
         .norm(0) = vNorm(0)
         .norm(1) = vNorm(1)
         .norm(2) = vNorm(2)
@@ -122,7 +123,7 @@ Private Function pvFindVertex(vertexBuffer() As UcsVertexDataType, ByVal numVert
     For lIdx = 0 To numVertexes - 1
         With vertexBuffer(lIdx)
             If Abs(.pos(0) - uData.pos(0)) < EPSILON And Abs(.pos(1) - uData.pos(1)) < EPSILON And Abs(.pos(2) - uData.pos(2)) < EPSILON Then
-                If Abs(.uv(0) - uData.uv(0)) < EPSILON And Abs(.uv(1) - uData.uv(1)) < EPSILON Then
+                If Abs(.uV(0) - uData.uV(0)) < EPSILON And Abs(.uV(1) - uData.uV(1)) < EPSILON Then
                     If bSmoothNormals Then
                         Exit For
                     ElseIf Abs(.norm(0) - uData.norm(0)) < EPSILON And Abs(.norm(1) - uData.norm(1)) < EPSILON And Abs(.norm(2) - uData.norm(2)) < EPSILON Then

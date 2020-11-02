@@ -56,7 +56,6 @@ End Enum
 '=========================================================================
 
 Private Const sizeof_Single         As Long = 4
-Private Const sizeof_UcsConstants   As Long = 16 * sizeof_Single
 Private Const sizeof_Integer        As Long = 2
 
 Private m_d3d11Device           As ID3D11Device1
@@ -64,19 +63,23 @@ Private m_d3d11DeviceContext    As ID3D11DeviceContext1
 Private m_d3d11SwapChain        As IDXGISwapChain1
 Private m_d3d11FrameBufferView  As ID3D11RenderTargetView
 Private m_depthBufferView       As ID3D11DepthStencilView
-Private m_vsBlob                As ID3DBlob
-Private m_vertexShader          As ID3D11VertexShader
-Private m_pixelShader           As ID3D11PixelShader
-Private m_inputLayout           As ID3D11InputLayout
-Private m_vertexBuffer          As ID3D11Buffer
-Private m_indexBuffer           As ID3D11Buffer
-'Private m_numVerts              As Long
-Private m_numIndices            As Long
+Private m_lightVertexShader     As ID3D11VertexShader
+Private m_lightPixelShader      As ID3D11PixelShader
+Private m_lightInputLayout      As ID3D11InputLayout
+Private m_blinnPhongVertexShader As ID3D11VertexShader
+Private m_blinnPhongPixelShader As ID3D11PixelShader
+Private m_blinnPhongInputLayout As ID3D11InputLayout
+Private m_cubeVertexBuffer      As ID3D11Buffer
+Private m_cubeIndexBuffer       As ID3D11Buffer
+'Private m_cubeNumVerts          As Long
+Private m_cubeNumIndices        As Long
 Private m_stride                As Long
 Private m_offset                As Long
 Private m_samplerState          As ID3D11SamplerState
 Private m_textureView           As ID3D11ShaderResourceView
-Private m_constantBuffer        As ID3D11Buffer
+Private m_lightVSConstantBuffer As ID3D11Buffer
+Private m_blinnPhongVSConstantBuffer As ID3D11Buffer
+Private m_blinnPhongPSConstantBuffer As ID3D11Buffer
 Private m_rasterizerState       As ID3D11RasterizerState
 Private m_depthStencilState     As ID3D11DepthStencilState
 Private m_perspectiveMat        As XMMATRIX
@@ -93,9 +96,34 @@ Private Type UcsBufferType
     Data()              As Byte
 End Type
 
-Private Type UcsConstantsType
+Private Type UcsLightVSConstants
     modelViewProj       As XMMATRIX
+    color               As XMFLOAT4
 End Type
+Private Const sizeof_UcsLightVSConstants = (16 + 4) * sizeof_Single
+
+Private Type UcsBlinnPhongVSConstants
+    modelViewProj       As XMMATRIX
+    modelView           As XMMATRIX
+    normalMatrix        As XMFLOAT3X3
+End Type
+Private Const sizeof_UcsBlinnPhongVSConstants = (16 + 16 + 9) * sizeof_Single
+
+Private Type UcsDirectionalLight
+    dirEye              As XMFLOAT4
+    color               As XMFLOAT4
+End Type
+
+Private Type UcsPointLight
+    posEye              As XMFLOAT4
+    color               As XMFLOAT4
+End Type
+
+Private Type UcsBlinnPhongPSConstants
+    dirLight            As UcsDirectionalLight
+    pointLights(0 To 1) As UcsPointLight
+End Type
+Private Const sizeof_UcsBlinnPhongPSConstants = (8 + 16) * sizeof_Single
 
 '=========================================================================
 ' Methods
@@ -155,6 +183,7 @@ End Sub
 Private Sub pvMainLoop()
     Dim hResult         As VBHRESULT
     Dim aGUID(0 To 3)   As Long
+    Dim lIdx            As Long
     
     '--- Create D3D11 Device and Context
     Dim featureLevels() As Long
@@ -198,6 +227,7 @@ Private Sub pvMainLoop()
     Debug.Print "Graphics Device: " & Replace(adapterDesc.Description, vbNullChar, vbNullString)
     Call IIDFromString(szIID_IDXGIFactory2, aGUID(0))
     Set dxgiFactory = dxgiAdapter.GetParent(aGUID(0))
+    Set dxgiAdapter = Nothing
     With d3d11SwapChainDesc
         .Width = 0 '--- use window width
         .Height = 0 '--- use window height
@@ -212,34 +242,22 @@ Private Sub pvMainLoop()
         .Flags = 0
     End With
     Set m_d3d11SwapChain = dxgiFactory.CreateSwapChainForHwnd(m_d3d11Device, hWnd, d3d11SwapChainDesc, ByVal 0, Nothing)
+    Set dxgiFactory = Nothing
 
     '--- Create Render Target and Depth Buffer
     pvCreateD3D11RenderTargets m_d3d11Device, m_d3d11SwapChain, m_d3d11FrameBufferView, m_depthBufferView
     
-    '--- Create Vertex Shader
-    Dim shaderCompileErrorsBlob As ID3DBlob
-    Dim errorString     As String
-    Dim shaderCompileFlags As Long
     '--- Compiling with this flag allows debugging shaders with Visual Studio
+    Dim shaderCompileFlags As Long
     #If DebugBuild Then
         shaderCompileFlags = shaderCompileFlags Or D3DCOMPILE_DEBUG
     #End If
-    hResult = D3DCompileFromFile(PathCombine(App.Path, "shaders.hlsl"), ByVal 0, ByVal 0, "vs_main", "vs_5_0", shaderCompileFlags, 0, m_vsBlob, shaderCompileErrorsBlob)
-    If hResult < 0 Then
-        If hResult = LNG_FACILITY_WIN32 Or ERROR_FILE_NOT_FOUND Then
-            errorString = "Could not compile shader; file not found"
-        ElseIf Not shaderCompileErrorsBlob Is Nothing Then
-            errorString = pvToString(shaderCompileErrorsBlob.GetBufferPointer())
-        End If
-        MsgBox errorString, vbCritical, "Shader Compiler Error"
-        Unload Me
-        GoTo QH
-    End If
-    Set m_vertexShader = m_d3d11Device.CreateVertexShader(m_vsBlob.GetBufferPointer(), m_vsBlob.GetBufferSize(), Nothing)
     
-    '--- Create Pixel Shader
-    Dim psBlob As ID3DBlob
-    hResult = D3DCompileFromFile(PathCombine(App.Path, "shaders.hlsl"), ByVal 0, ByVal 0, "ps_main", "ps_5_0", shaderCompileFlags, 0, psBlob, shaderCompileErrorsBlob)
+    '--- Create Vertex Shader for rendering our lights
+    Dim shaderCompileErrorsBlob As ID3DBlob
+    Dim errorString     As String
+    Dim lightVsCode     As ID3DBlob
+    hResult = D3DCompileFromFile(PathCombine(App.Path, "Lights.hlsl"), ByVal 0, ByVal 0, "vs_main", "vs_5_0", shaderCompileFlags, 0, lightVsCode, shaderCompileErrorsBlob)
     If hResult < 0 Then
         If hResult = LNG_FACILITY_WIN32 Or ERROR_FILE_NOT_FOUND Then
             errorString = "Could not compile shader; file not found"
@@ -250,33 +268,87 @@ Private Sub pvMainLoop()
         Unload Me
         GoTo QH
     End If
-    Set m_pixelShader = m_d3d11Device.CreatePixelShader(psBlob.GetBufferPointer(), psBlob.GetBufferSize(), Nothing)
+    Set m_lightVertexShader = m_d3d11Device.CreateVertexShader(lightVsCode.GetBufferPointer(), lightVsCode.GetBufferSize(), Nothing)
+    
+    '--- Create Pixel Shader for rendering our lights
+    Dim psBlob As ID3DBlob
+    hResult = D3DCompileFromFile(PathCombine(App.Path, "Lights.hlsl"), ByVal 0, ByVal 0, "ps_main", "ps_5_0", shaderCompileFlags, 0, psBlob, shaderCompileErrorsBlob)
+    If hResult < 0 Then
+        If hResult = LNG_FACILITY_WIN32 Or ERROR_FILE_NOT_FOUND Then
+            errorString = "Could not compile shader; file not found"
+        ElseIf Not shaderCompileErrorsBlob Is Nothing Then
+            errorString = pvToString(shaderCompileErrorsBlob.GetBufferPointer())
+        End If
+        MsgBox errorString, vbCritical, "Shader Compiler Error"
+        Unload Me
+        GoTo QH
+    End If
+    Set m_lightPixelShader = m_d3d11Device.CreatePixelShader(psBlob.GetBufferPointer(), psBlob.GetBufferSize(), Nothing)
     Set psBlob = Nothing
     
-    '--- Create Input Layout
-    Dim inputElementDesc(0 To 1)  As D3D11_INPUT_ELEMENT_DESC
-    Dim nameBuffer(0 To 1) As UcsBufferType
+    '--- Create Input Layout for our light vertex shader
+    Dim lightInputElementDesc(0 To 0)  As D3D11_INPUT_ELEMENT_DESC
+    Dim lightNameBuffer(0 To 0) As UcsBufferType
+    pvInitInputElementDesc lightInputElementDesc(0), lightNameBuffer(0), "POS", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0
+    Set m_lightInputLayout = m_d3d11Device.CreateInputLayout(lightInputElementDesc(0), UBound(lightInputElementDesc) + 1, lightVsCode.GetBufferPointer(), lightVsCode.GetBufferSize())
+    Set lightVsCode = Nothing
+    
+    '--- Create Vertex Shader for rendering our lit objects
+    Dim blinnPhongVsCode     As ID3DBlob
+    hResult = D3DCompileFromFile(PathCombine(App.Path, "BlinnPhong.hlsl"), ByVal 0, ByVal 0, "vs_main", "vs_5_0", shaderCompileFlags, 0, blinnPhongVsCode, shaderCompileErrorsBlob)
+    If hResult < 0 Then
+        If hResult = LNG_FACILITY_WIN32 Or ERROR_FILE_NOT_FOUND Then
+            errorString = "Could not compile shader; file not found"
+        ElseIf Not shaderCompileErrorsBlob Is Nothing Then
+            errorString = pvToString(shaderCompileErrorsBlob.GetBufferPointer())
+        End If
+        MsgBox errorString, vbCritical, "Shader Compiler Error"
+        Unload Me
+        GoTo QH
+    End If
+    Set m_blinnPhongVertexShader = m_d3d11Device.CreateVertexShader(blinnPhongVsCode.GetBufferPointer(), blinnPhongVsCode.GetBufferSize(), Nothing)
+    
+    '--- Create Pixel Shader for rendering our lit objects
+    hResult = D3DCompileFromFile(PathCombine(App.Path, "BlinnPhong.hlsl"), ByVal 0, ByVal 0, "ps_main", "ps_5_0", shaderCompileFlags, 0, psBlob, shaderCompileErrorsBlob)
+    If hResult < 0 Then
+        If hResult = LNG_FACILITY_WIN32 Or ERROR_FILE_NOT_FOUND Then
+            errorString = "Could not compile shader; file not found"
+        ElseIf Not shaderCompileErrorsBlob Is Nothing Then
+            errorString = pvToString(shaderCompileErrorsBlob.GetBufferPointer())
+        End If
+        MsgBox errorString, vbCritical, "Shader Compiler Error"
+        Unload Me
+        GoTo QH
+    End If
+    Set m_blinnPhongPixelShader = m_d3d11Device.CreatePixelShader(psBlob.GetBufferPointer(), psBlob.GetBufferSize(), Nothing)
+    Set psBlob = Nothing
+    
+    '--- Create Input Layout for our Blinn-Phong vertex shader
+    Dim inputElementDesc(0 To 2)  As D3D11_INPUT_ELEMENT_DESC
+    Dim nameBuffer(0 To 2) As UcsBufferType
     pvInitInputElementDesc inputElementDesc(0), nameBuffer(0), "POS", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0
-    pvInitInputElementDesc inputElementDesc(1), nameBuffer(0), "TEX", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0
-    Set m_inputLayout = m_d3d11Device.CreateInputLayout(inputElementDesc(0), UBound(inputElementDesc) + 1, m_vsBlob.GetBufferPointer(), m_vsBlob.GetBufferSize())
+    pvInitInputElementDesc inputElementDesc(1), nameBuffer(1), "TEX", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0
+    pvInitInputElementDesc inputElementDesc(2), nameBuffer(1), "NORM", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0
+    Set m_blinnPhongInputLayout = m_d3d11Device.CreateInputLayout(inputElementDesc(0), UBound(inputElementDesc) + 1, blinnPhongVsCode.GetBufferPointer(), blinnPhongVsCode.GetBufferSize())
+    Set blinnPhongVsCode = Nothing
     
     '--- Create Vertex and Index Buffer
     Dim obj As UcsLoadedObjType
     obj = LoadObj(PathCombine(App.Path, "cube.obj"))
-    m_stride = Len(obj.vertexBuffer(0))
-    'm_numVerts = obj.numVertexes
+    m_stride = sizeof_UcsVertexDataType
+    'm_cubeNumVerts = obj.numVertexes
     m_offset = 0
-    m_numIndices = obj.numIndices
+    m_cubeNumIndices = obj.numIndices
     
     Dim vertexBufferDesc As D3D11_BUFFER_DESC
     With vertexBufferDesc
-        .ByteWidth = obj.numVertexes * Len(obj.vertexBuffer(0))
+        .ByteWidth = obj.numVertexes * sizeof_UcsVertexDataType
         .Usage = D3D11_USAGE_IMMUTABLE
         .BindFlags = D3D11_BIND_VERTEX_BUFFER
     End With
     Dim vertexSubresourceData As D3D11_SUBRESOURCE_DATA
     vertexSubresourceData.pSysMem = VarPtr(obj.vertexBuffer(0))
-    Set m_vertexBuffer = m_d3d11Device.CreateBuffer(vertexBufferDesc, vertexSubresourceData)
+    Set m_cubeVertexBuffer = m_d3d11Device.CreateBuffer(vertexBufferDesc, vertexSubresourceData)
     
     Dim indexBufferDesc  As D3D11_BUFFER_DESC
     With indexBufferDesc
@@ -286,7 +358,7 @@ Private Sub pvMainLoop()
     End With
     Dim indexSubresourceData As D3D11_SUBRESOURCE_DATA
     indexSubresourceData.pSysMem = VarPtr(obj.indexBuffer(0))
-    Set m_indexBuffer = m_d3d11Device.CreateBuffer(indexBufferDesc, indexSubresourceData)
+    Set m_cubeIndexBuffer = m_d3d11Device.CreateBuffer(indexBufferDesc, indexSubresourceData)
     
     '--- Create Sampler State
     Dim samplerDesc As D3D11_SAMPLER_DESC
@@ -337,15 +409,33 @@ Private Sub pvMainLoop()
     Set texture = m_d3d11Device.CreateTexture2D(textureDesc, textureSubresourceData)
     Set m_textureView = m_d3d11Device.CreateShaderResourceView(texture, ByVal 0)
     
-    '--- Create Constant Buffer
+    '--- Create Constant Buffer for our light vertex shader
     Dim constantBufferDesc As D3D11_BUFFER_DESC
     With constantBufferDesc
-        .ByteWidth = (sizeof_UcsConstants + &HF&) And &HFFFFFFF0 '--- ByteWidth must be a multiple of 16, per the docs
+        .ByteWidth = (sizeof_UcsLightVSConstants + &HF&) And &HFFFFFFF0 '--- ByteWidth must be a multiple of 16, per the docs
         .Usage = D3D11_USAGE_DYNAMIC
         .BindFlags = D3D11_BIND_CONSTANT_BUFFER
         .CPUAccessFlags = D3D11_CPU_ACCESS_WRITE
     End With
-    Set m_constantBuffer = m_d3d11Device.CreateBuffer(constantBufferDesc, ByVal 0)
+    Set m_lightVSConstantBuffer = m_d3d11Device.CreateBuffer(constantBufferDesc, ByVal 0)
+    
+    '--- Create Constant Buffer for our Blinn-Phong vertex shader
+    With constantBufferDesc
+        .ByteWidth = (sizeof_UcsBlinnPhongVSConstants + &HF&) And &HFFFFFFF0 '--- ByteWidth must be a multiple of 16, per the docs
+        .Usage = D3D11_USAGE_DYNAMIC
+        .BindFlags = D3D11_BIND_CONSTANT_BUFFER
+        .CPUAccessFlags = D3D11_CPU_ACCESS_WRITE
+    End With
+    Set m_blinnPhongVSConstantBuffer = m_d3d11Device.CreateBuffer(constantBufferDesc, ByVal 0)
+    
+    '--- Create Constant Buffer for our Blinn-Phong pixel shader
+    With constantBufferDesc
+        .ByteWidth = (sizeof_UcsBlinnPhongPSConstants + &HF&) And &HFFFFFFF0 '--- ByteWidth must be a multiple of 16, per the docs
+        .Usage = D3D11_USAGE_DYNAMIC
+        .BindFlags = D3D11_BIND_CONSTANT_BUFFER
+        .CPUAccessFlags = D3D11_CPU_ACCESS_WRITE
+    End With
+    Set m_blinnPhongPSConstantBuffer = m_d3d11Device.CreateBuffer(constantBufferDesc, ByVal 0)
     
     Dim rasterizerDesc As D3D11_RASTERIZER_DESC
     With rasterizerDesc
@@ -365,8 +455,8 @@ Private Sub pvMainLoop()
     Set m_depthStencilState = m_d3d11Device.CreateDepthStencilState(depthStencilDesc)
     
     '--- Camera
-    m_cameraPos = XmMake3(0, 0, 2)
-    m_cameraFwd = XmMake3(0, 0, -1)
+    m_cameraPos = XmMake(0, 0, 2)
+    m_cameraFwd = XmMake(0, 0, -1)
     m_cameraPitch = 0!
     m_cameraYaw = 0!
     
@@ -396,6 +486,7 @@ Private Sub pvMainLoop()
         If m_windowDidResize Then
             m_d3d11DeviceContext.OMSetRenderTargets 0, Nothing, Nothing
             Set m_d3d11FrameBufferView = Nothing
+            Set m_depthBufferView = Nothing
             m_d3d11SwapChain.ResizeBuffers 0, 0, 0, DXGI_FORMAT_UNKNOWN, 0
             
             pvCreateD3D11RenderTargets m_d3d11Device, m_d3d11SwapChain, m_d3d11FrameBufferView, m_depthBufferView
@@ -407,8 +498,8 @@ Private Sub pvMainLoop()
         '--- Update camera
         Dim camFwdXZ        As XMFLOAT3
         Dim cameraRightXZ   As XMFLOAT3
-        camFwdXZ = XmNormalize(XmMake3(m_cameraFwd.x, 0, m_cameraFwd.z))
-        cameraRightXZ = XmCross(camFwdXZ, XmMake3(0, 1, 0))
+        camFwdXZ = XmNormalize(XmMake(m_cameraFwd.x, 0, m_cameraFwd.z))
+        cameraRightXZ = XmCross(camFwdXZ, XmMake(0, 1, 0))
 
         Const CAM_MOVE_SPEED As Single = 5!  '--- in metres per second
         Dim CAM_MOVE_AMOUNT As Single
@@ -429,7 +520,7 @@ Private Sub pvMainLoop()
             m_cameraPos.y = m_cameraPos.y + CAM_MOVE_AMOUNT
         End If
         If m_keyIsDown(GameActionLowerCam) Then
-            m_cameraPos.y = m_cameraPos.y + CAM_MOVE_AMOUNT
+            m_cameraPos.y = m_cameraPos.y - CAM_MOVE_AMOUNT
         End If
         
         Const CAM_TURN_SPEED As Single = M_PI '--- in radians per second
@@ -476,30 +567,70 @@ Private Sub pvMainLoop()
             XmTranslationMat(XmNeg(m_cameraPos)), _
             XmRotateYMat(-m_cameraYaw)), _
             XmRotateXMat(-m_cameraPitch))
+        Dim inverseViewMat As XMMATRIX
+        inverseViewMat = XmMulMat(XmMulMat( _
+            XmRotateXMat(m_cameraPitch), _
+            XmRotateYMat(m_cameraYaw)), _
+            XmTranslationMat(m_cameraPos))
         
         '--- Update the forward vector we use for camera movement:
-        m_cameraFwd = XmMake3(viewMat.m(0, 2), viewMat.m(1, 2), -viewMat.m(2, 2))
+        m_cameraFwd = XmMake(viewMat.m(2, 0), viewMat.m(2, 1), -viewMat.m(2, 2))
 
-        '--- Spin the cube
-        Dim modelMat As XMMATRIX
-        modelMat = XmMulMat( _
-            XmRotateXMat(-0.2! * (M_PI * m_currentTimeInSeconds)), _
-            XmRotateYMat(0.1! * (M_PI * m_currentTimeInSeconds)))
+        '--- Calculate matrices for cubes
+        Const NUM_CUBES As Long = 3
+        Dim cubeModelViewMats(0 To NUM_CUBES - 1) As XMMATRIX
+        Dim cubeNormalMats(0 To NUM_CUBES - 1) As XMFLOAT3X3
+        Dim cubePositions(0 To NUM_CUBES - 1) As XMFLOAT3
+        cubePositions(0) = XmMake(0!, 0!, 0!)
+        cubePositions(1) = XmMake(-3!, 0!, -1.5!)
+        cubePositions(2) = XmMake(4.5!, 0.2!, -3!)
+        Dim modelXRotation As Single
+        Dim modelYRotation As Single
+        modelXRotation = 0.2! * (M_PI * m_currentTimeInSeconds)
+        modelYRotation = 0.1! * (M_PI * m_currentTimeInSeconds)
+        For lIdx = 0 To NUM_CUBES - 1
+            modelXRotation = modelXRotation + 0.6! * lIdx '--- Add an offset so cubes have different phases
+            modelYRotation = modelYRotation + 0.6! * lIdx
+            Dim modelMat  As XMMATRIX
+            Dim inverseModelMat As XMMATRIX
+            Dim inverseModelViewMat As XMMATRIX
+            modelMat = XmMulMat(XmMulMat( _
+                XmRotateXMat(modelXRotation), _
+                XmRotateYMat(modelYRotation)), _
+                XmTranslationMat(cubePositions(lIdx)))
+            inverseModelMat = XmMulMat(XmMulMat( _
+                XmTranslationMat(XmNeg(cubePositions(lIdx))), _
+                XmRotateYMat(-modelYRotation)), _
+                XmRotateXMat(-modelXRotation))
+            cubeModelViewMats(lIdx) = XmMulMat(modelMat, viewMat)
+            inverseModelViewMat = XmMulMat(inverseViewMat, inverseModelMat)
+            cubeNormalMats(lIdx) = XmMatToFloat3x3(XmTransposeMat(inverseModelViewMat))
+        Next
         
-        '--- Calculate model-view-projection matrix to send to shader
-        Dim modelViewProj As XMMATRIX
-        modelViewProj = XmMulMat(XmMulMat( _
-            modelMat, _
-            viewMat), _
-            m_perspectiveMat)
+        '--- Move the point lights
+        Const NUM_LIGHTS As Long = 2
+        Dim lightColor(0 To NUM_LIGHTS - 1) As XMFLOAT4
+        lightColor(0) = XmMake4(0.1!, 0.4!, 0.9!, 1!)
+        lightColor(1) = XmMake4(0.9!, 0.1!, 0.6!, 1!)
         
-        '--- Update constant buffer
-        Dim mappedSubresource As D3D11_MAPPED_SUBRESOURCE
-        m_d3d11DeviceContext.Map m_constantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, mappedSubresource
-        Dim constants As UcsConstantsType
-        constants.modelViewProj = modelViewProj
-        Call CopyMemory(ByVal mappedSubresource.pData, constants, sizeof_UcsConstants)
-        m_d3d11DeviceContext.Unmap m_constantBuffer, 0
+        Dim lightModelViewMats(0 To NUM_LIGHTS - 1) As XMMATRIX
+        Dim pointLightPosEye(0 To NUM_LIGHTS - 1) As XMFLOAT4
+        
+        Dim initialPointLightPositions(0 To NUM_LIGHTS - 1) As XMFLOAT4
+        initialPointLightPositions(0) = XmMake4(1, 0.5!, 0, 1)
+        initialPointLightPositions(1) = XmMake4(-1, 0.7!, -1.2!, 1)
+        
+        Dim lightRotation As Single
+        lightRotation = -0.3! * (M_PI * m_currentTimeInSeconds)
+        For lIdx = 0 To NUM_LIGHTS - 1
+            lightRotation = lightRotation + 0.5! * lIdx '--- Add an offset so lights have different phases
+            lightModelViewMats(lIdx) = XmMulMat(XmMulMat(XmMulMat( _
+                XmScaleMat(0.2!), _
+                XmTranslationMat(XmToFloat3(initialPointLightPositions(lIdx)))), _
+                XmRotateYMat(lightRotation)), _
+                viewMat)
+            pointLightPosEye(lIdx) = XmColMat(lightModelViewMats(lIdx), 3)
+        Next
         
         Dim backgroundColor() As Single
         pvArraySingle backgroundColor, 0.1!, 0.2!, 0.6!, 1!
@@ -515,19 +646,73 @@ Private Sub pvMainLoop()
         m_d3d11DeviceContext.OMSetRenderTargets 1, m_d3d11FrameBufferView, m_depthBufferView
         
         m_d3d11DeviceContext.IASetPrimitiveTopology D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST
-        m_d3d11DeviceContext.IASetInputLayout m_inputLayout
         
-        m_d3d11DeviceContext.VSSetShader m_vertexShader, Nothing, 0
-        m_d3d11DeviceContext.VSSetConstantBuffers 0, 1, m_constantBuffer
+        m_d3d11DeviceContext.IASetVertexBuffers 0, 1, m_cubeVertexBuffer, m_stride, m_offset
+        m_d3d11DeviceContext.IASetIndexBuffer m_cubeIndexBuffer, DXGI_FORMAT_R16_UINT, 0
+                
+        '--- Draw lights
+        Dim mappedSubresource As D3D11_MAPPED_SUBRESOURCE
+        Dim lightConstants As UcsLightVSConstants
+        m_d3d11DeviceContext.IASetInputLayout m_lightInputLayout
+        m_d3d11DeviceContext.VSSetShader m_lightVertexShader, Nothing, 0
+        m_d3d11DeviceContext.PSSetShader m_lightPixelShader, Nothing, 0
         
-        m_d3d11DeviceContext.PSSetShader m_pixelShader, Nothing, 0
+        m_d3d11DeviceContext.VSSetConstantBuffers 0, 1, m_lightVSConstantBuffer
+        
+        For lIdx = 0 To NUM_LIGHTS - 1
+            m_d3d11DeviceContext.Map m_lightVSConstantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, mappedSubresource
+            Call CopyMemory(lightConstants, ByVal mappedSubresource.pData, Len(lightConstants))
+            With lightConstants
+                .modelViewProj = XmMulMat(lightModelViewMats(lIdx), m_perspectiveMat)
+                .color = lightColor(lIdx)
+            End With
+            Call CopyMemory(ByVal mappedSubresource.pData, lightConstants, Len(lightConstants))
+            m_d3d11DeviceContext.Unmap m_lightVSConstantBuffer, 0
+
+            m_d3d11DeviceContext.DrawIndexed m_cubeNumIndices, 0, 0
+        Next
+        
+        '--- Draw cubes
+        m_d3d11DeviceContext.IASetInputLayout m_blinnPhongInputLayout
+        m_d3d11DeviceContext.VSSetShader m_blinnPhongVertexShader, Nothing, 0
+        m_d3d11DeviceContext.PSSetShader m_blinnPhongPixelShader, Nothing, 0
+        
         m_d3d11DeviceContext.PSSetShaderResources 0, 1, m_textureView
         m_d3d11DeviceContext.PSSetSamplers 0, 1, m_samplerState
         
-        m_d3d11DeviceContext.IASetVertexBuffers 0, 1, m_vertexBuffer, m_stride, m_offset
-        m_d3d11DeviceContext.IASetIndexBuffer m_indexBuffer, DXGI_FORMAT_R16_UINT, 0
-
-        m_d3d11DeviceContext.DrawIndexed m_numIndices, 0, 0
+        m_d3d11DeviceContext.VSSetConstantBuffers 0, 1, m_blinnPhongVSConstantBuffer
+        m_d3d11DeviceContext.PSSetConstantBuffers 0, 1, m_blinnPhongPSConstantBuffer
+        
+        '--- Update pixel shader constant buffer
+        Dim blinnPhongPSConstants As UcsBlinnPhongPSConstants
+        m_d3d11DeviceContext.Map m_blinnPhongPSConstantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, mappedSubresource
+        Call CopyMemory(blinnPhongPSConstants, ByVal mappedSubresource.pData, Len(blinnPhongPSConstants))
+        With blinnPhongPSConstants
+            .dirLight.dirEye = XmNormalize4(XmMake4(1!, 1!, 1!, 0!))
+            .dirLight.color = XmMake4(0.7!, 0.8!, 0.2!, 1!)
+            For lIdx = 0 To NUM_LIGHTS - 1
+                .pointLights(lIdx).posEye = pointLightPosEye(lIdx)
+                .pointLights(lIdx).color = lightColor(lIdx)
+            Next
+        End With
+        Call CopyMemory(ByVal mappedSubresource.pData, blinnPhongPSConstants, Len(blinnPhongPSConstants))
+        m_d3d11DeviceContext.Unmap m_blinnPhongPSConstantBuffer, 0
+        
+        For lIdx = 0 To NUM_CUBES - 1
+            '--- Update vertex shader constant buffer
+            Dim blinnPhongVSConstants As UcsBlinnPhongVSConstants
+            m_d3d11DeviceContext.Map m_blinnPhongVSConstantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, mappedSubresource
+            Call CopyMemory(blinnPhongVSConstants, ByVal mappedSubresource.pData, Len(blinnPhongVSConstants))
+            With blinnPhongVSConstants
+                .modelViewProj = XmMulMat(cubeModelViewMats(lIdx), m_perspectiveMat)
+                .modelView = cubeModelViewMats(lIdx)
+                .normalMatrix = cubeNormalMats(lIdx)
+            End With
+            Call CopyMemory(ByVal mappedSubresource.pData, blinnPhongVSConstants, Len(blinnPhongVSConstants))
+            m_d3d11DeviceContext.Unmap m_blinnPhongVSConstantBuffer, 0
+            
+            m_d3d11DeviceContext.DrawIndexed m_cubeNumIndices, 0, 0
+        Next
         
         m_d3d11SwapChain.Present 1, 0
         
