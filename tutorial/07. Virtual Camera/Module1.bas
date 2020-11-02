@@ -72,7 +72,7 @@ Public Function XmNeg(uA As XMFLOAT3) As XMFLOAT3
     End With
 End Function
 
-Public Function XmRotateXMat(ByVal sngRad As Single) As XMFLOAT4X4
+Public Function XmRotateXMat(ByVal sngRad As Single) As XMMATRIX
     Dim sngSin          As Single
     Dim sngCos          As Single
     
@@ -86,7 +86,7 @@ Public Function XmRotateXMat(ByVal sngRad As Single) As XMFLOAT4X4
     End With
 End Function
 
-Public Function XmRotateYMat(ByVal sngRad As Single) As XMFLOAT4X4
+Public Function XmRotateYMat(ByVal sngRad As Single) As XMMATRIX
     Dim sngSin          As Single
     Dim sngCos          As Single
     
@@ -100,7 +100,7 @@ Public Function XmRotateYMat(ByVal sngRad As Single) As XMFLOAT4X4
     End With
 End Function
 
-Public Function XmTranslationMat(uTrans As XMFLOAT3) As XMFLOAT4X4
+Public Function XmTranslationMat(uTrans As XMFLOAT3) As XMMATRIX
     With XmTranslationMat
         .m(0, 0) = 1:                                               .m(3, 0) = uTrans.x
                             .m(1, 1) = 1:                           .m(3, 1) = uTrans.y
@@ -109,7 +109,7 @@ Public Function XmTranslationMat(uTrans As XMFLOAT3) As XMFLOAT4X4
     End With
 End Function
 
-Public Function XmMakePerspectiveMat(ByVal sngAspectRatio As Single, ByVal sngFovYRadians As Single, ByVal sngZNear As Single, ByVal sngZFar As Single) As XMFLOAT4X4
+Public Function XmMakePerspectiveMat(ByVal sngAspectRatio As Single, ByVal sngFovYRadians As Single, ByVal sngZNear As Single, ByVal sngZFar As Single) As XMMATRIX
     Dim yScale          As Single
     Dim xScale          As Single
     Dim zRangeInverse   As Single
@@ -129,7 +129,7 @@ Public Function XmMakePerspectiveMat(ByVal sngAspectRatio As Single, ByVal sngFo
     End With
 End Function
 
-Public Function XmColMat(uMat As XMFLOAT4X4, ByVal Index As Long) As XMFLOAT4
+Public Function XmColMat(uMat As XMMATRIX, ByVal Index As Long) As XMFLOAT4
     With uMat
         XmColMat.x = .m(0, Index)
         XmColMat.y = .m(1, Index)
@@ -138,7 +138,7 @@ Public Function XmColMat(uMat As XMFLOAT4X4, ByVal Index As Long) As XMFLOAT4
     End With
 End Function
 
-Public Function XmRowMat(uMat As XMFLOAT4X4, ByVal Index As Long) As XMFLOAT4
+Public Function XmRowMat(uMat As XMMATRIX, ByVal Index As Long) As XMFLOAT4
     With uMat
         XmRowMat.x = .m(Index, 0)
         XmRowMat.y = .m(Index, 1)
@@ -147,7 +147,7 @@ Public Function XmRowMat(uMat As XMFLOAT4X4, ByVal Index As Long) As XMFLOAT4
     End With
 End Function
 
-Public Function XmMulMat(uA As XMFLOAT4X4, uB As XMFLOAT4X4) As XMFLOAT4X4
+Public Function XmMulMat(uA As XMMATRIX, uB As XMMATRIX) As XMMATRIX
     Dim uRow0           As XMFLOAT4
     Dim uRow1           As XMFLOAT4
     Dim uRow2           As XMFLOAT4

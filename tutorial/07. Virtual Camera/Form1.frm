@@ -89,7 +89,7 @@ Private Type UcsBuffer
 End Type
 
 Private Type UcsConstants
-    modelViewProj       As XMFLOAT4X4
+    modelViewProj       As XMMATRIX
 End Type
 Private Const sizeof_Single         As Long = 4
 Private Const sizeof_UcsConstants   As Long = 16 * sizeof_Single
@@ -353,7 +353,7 @@ Private Sub Form_Load()
     Set m_rasterizerState = m_d3d11Device.CreateRasterizerState(rasterizerDesc)
     
     '--- Camera
-    Dim perspectiveMat As XMFLOAT4X4
+    Dim perspectiveMat As XMMATRIX
     m_cameraPos = XmMake3(0, 0, 2)
     m_cameraFwd = XmMake3(0, 0, -1)
     m_cameraPitch = 0!
@@ -463,7 +463,7 @@ Private Sub Form_Load()
         ' Applying the rule inverse(A*B) = inverse(B) * inverse(A) gives:
         ' float4x4 viewMat = inverse(translationMat(cameraPos)) * inverse(rotateYMat(cameraYaw)) * inverse(rotateXMat(cameraPitch));
         ' The inverse of a rotation/translation is a negated rotation/translation:
-        Dim viewMat As XMFLOAT4X4
+        Dim viewMat As XMMATRIX
         viewMat = XmMulMat(XmMulMat( _
             XmTranslationMat(XmNeg(m_cameraPos)), _
             XmRotateYMat(-m_cameraYaw)), _
@@ -473,11 +473,11 @@ Private Sub Form_Load()
         m_cameraFwd = XmMake3(viewMat.m(0, 2), viewMat.m(1, 2), -viewMat.m(2, 2))
 
         '--- Spin the quad
-        Dim modelMat As XMFLOAT4X4
+        Dim modelMat As XMMATRIX
         modelMat = XmRotateYMat(0.2! * (M_PI * m_currentTimeInSeconds))
         
         '--- Calculate model-view-projection matrix to send to shader
-        Dim modelViewProj As XMFLOAT4X4
+        Dim modelViewProj As XMMATRIX
         modelViewProj = XmMulMat(XmMulMat( _
             modelMat, _
             viewMat), _
