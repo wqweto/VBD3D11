@@ -1,4 +1,4 @@
-Attribute VB_Name = "Module1"
+Attribute VB_Name = "md3DMaths"
 Option Explicit
 DefObj A-Z
 
