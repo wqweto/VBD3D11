@@ -123,7 +123,7 @@ Public Function XmMakePerspectiveMat(ByVal sngAspectRatio As Single, ByVal sngFo
     zTranslation = sngZFar * sngZNear * zRangeInverse
     With XmMakePerspectiveMat
         .m(0, 0) = xScale:
-                            .m(1, 1) = xScale:
+                            .m(1, 1) = yScale:
                                                 .m(2, 2) = zScale:  .m(3, 2) = zTranslation
                                                 .m(2, 3) = -1
     End With

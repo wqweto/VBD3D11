@@ -28,22 +28,6 @@ Private Declare Function lstrlen Lib "kernel32" Alias "lstrlenA" (ByVal lpString
 Private Declare Function GetClientRect Lib "user32" (ByVal hWnd As Long, lpRect As D3D11_RECT) As Long
 Private Declare Function QueryPerformanceCounter Lib "kernel32" (lpPerformanceCount As Currency) As Long
 Private Declare Function QueryPerformanceFrequency Lib "kernel32" (lpFrequency As Currency) As Long
-Private Declare Function GetModuleHandle Lib "kernel32" Alias "GetModuleHandleA" (ByVal lpModuleName As String) As Long
-'--- GDI+
-Private Declare Function GdiplusStartup Lib "gdiplus" (hToken As Long, pInputBuf As Any, Optional ByVal pOutputBuf As Long = 0) As Long
-Private Declare Function GdipLoadImageFromFile Lib "gdiplus" (ByVal sFilename As Long, hImage As Long) As Long
-Private Declare Function GdipDisposeImage Lib "gdiplus" (ByVal hImage As Long) As Long
-Private Declare Function GdipBitmapLockBits Lib "gdiplus" (ByVal hBitmap As Long, lpRect As Any, ByVal lFlags As Long, ByVal lPixelFormat As Long, uLockedBitmapData As BitmapData) As Long
-Private Declare Function GdipBitmapUnlockBits Lib "gdiplus" (ByVal hBitmap As Long, uLockedBitmapData As BitmapData) As Long
-
-Private Type BitmapData
-    Width               As Long
-    Height              As Long
-    Stride              As Long
-    PixelFormat         As Long
-    Scan0               As Long
-    Reserved            As Long
-End Type
 
 Private Enum UcsGameAction
     GameActionMoveCamFwd
@@ -63,18 +47,23 @@ Private m_d3d11Device           As ID3D11Device1
 Private m_d3d11DeviceContext    As ID3D11DeviceContext1
 Private m_d3d11SwapChain        As IDXGISwapChain1
 Private m_d3d11FrameBufferView  As ID3D11RenderTargetView
+Private m_depthBufferView       As ID3D11DepthStencilView
 Private m_vsBlob                As ID3DBlob
 Private m_vertexShader          As ID3D11VertexShader
 Private m_pixelShader           As ID3D11PixelShader
 Private m_inputLayout           As ID3D11InputLayout
 Private m_vertexBuffer          As ID3D11Buffer
-Private m_numVerts              As Long
+Private m_indexBuffer           As ID3D11Buffer
+'Private m_numVerts              As Long
+Private m_numIndices            As Long
 Private m_stride                As Long
 Private m_offset                As Long
 Private m_samplerState          As ID3D11SamplerState
 Private m_textureView           As ID3D11ShaderResourceView
 Private m_constantBuffer        As ID3D11Buffer
 Private m_rasterizerState       As ID3D11RasterizerState
+Private m_depthStencilState     As ID3D11DepthStencilState
+Private m_perspectiveMat        As XMMATRIX
 Private m_cameraPos             As XMFLOAT3
 Private m_cameraFwd             As XMFLOAT3
 Private m_cameraPitch           As Single
@@ -93,6 +82,7 @@ Private Type UcsConstants
 End Type
 Private Const sizeof_Single         As Long = 4
 Private Const sizeof_UcsConstants   As Long = 16 * sizeof_Single
+Private Const sizeof_Integer        As Long = 2
 
 Private Sub pvHandleKey(KeyCode As Integer, Shift As Integer, ByVal bDown As Boolean)
     #If Shift Then
@@ -123,38 +113,27 @@ Private Sub pvHandleKey(KeyCode As Integer, Shift As Integer, ByVal bDown As Boo
     End Select
 End Sub
 
-Private Function pvLoadPng(sFilename As String, lWidth As Long, lHeight As Long, lChannels As Long, baData() As Byte) As Boolean
-    Const ImageLockModeRead As Long = 1
-    Const PixelFormat32bppPARGB As Long = &HE200B
-    Dim aInput(0 To 3)  As Long
-    Dim hBitmap         As Long
-    Dim uData           As BitmapData
+Private Sub pvCreateD3D11RenderTargets( _
+            d3d11Device As ID3D11Device1, _
+            swapChain As IDXGISwapChain1, _
+            d3d11FrameBufferView As ID3D11RenderTargetView, _
+            depthBufferView As ID3D11DepthStencilView)
+    Dim aGUID(0 To 4)   As Long
+    Dim d3d11FrameBuffer As ID3D11Texture2D
+    Dim depthBufferDesc As D3D11_TEXTURE2D_DESC
+    Dim depthBuffer     As ID3D11Texture2D
     
-    If GetModuleHandle("gdiplus") = 0 Then
-        aInput(0) = 1
-        Call GdiplusStartup(0, aInput(0))
-    End If
-    If GdipLoadImageFromFile(StrPtr(sFilename), hBitmap) <> 0 Then
-        GoTo QH
-    End If
-    If GdipBitmapLockBits(hBitmap, ByVal 0, ImageLockModeRead, PixelFormat32bppPARGB, uData) <> 0 Then
-        GoTo QH
-    End If
-    lWidth = uData.Width
-    lHeight = uData.Height
-    lChannels = 4
-    ReDim baData(0 To uData.Stride * uData.Height - 1) As Byte
-    Call CopyMemory(baData(0), ByVal uData.Scan0, UBound(baData) + 1)
-    '--- success
-    pvLoadPng = True
-QH:
-    If uData.Scan0 <> 0 Then
-        Call GdipBitmapUnlockBits(hBitmap, uData)
-    End If
-    If hBitmap <> 0 Then
-        Call GdipDisposeImage(hBitmap)
-    End If
-End Function
+    Call IIDFromString(szIID_ID3D11Texture2D, aGUID(0))
+    Set d3d11FrameBuffer = swapChain.GetBuffer(0, aGUID(0))
+    Set d3d11FrameBufferView = m_d3d11Device.CreateRenderTargetView(d3d11FrameBuffer, ByVal 0)
+    d3d11FrameBuffer.GetDesc depthBufferDesc
+    Set d3d11FrameBuffer = Nothing
+
+    depthBufferDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT
+    depthBufferDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL
+    Set depthBuffer = d3d11Device.CreateTexture2D(depthBufferDesc, ByVal 0)
+    Set depthBufferView = d3d11Device.CreateDepthStencilView(depthBuffer, ByVal 0)
+End Sub
 
 Private Sub Form_Load()
     Dim hResult         As VBHRESULT
@@ -217,17 +196,18 @@ Private Sub Form_Load()
     End With
     Set m_d3d11SwapChain = dxgiFactory.CreateSwapChainForHwnd(m_d3d11Device, hWnd, d3d11SwapChainDesc, ByVal 0, Nothing)
 
-    '--- Create Framebuffer Render Target
-    Dim d3d11FrameBuffer As ID3D11Texture2D
-    Call IIDFromString(szIID_ID3D11Texture2D, aGUID(0))
-    Set d3d11FrameBuffer = m_d3d11SwapChain.GetBuffer(0, aGUID(0))
-    Set m_d3d11FrameBufferView = m_d3d11Device.CreateRenderTargetView(d3d11FrameBuffer, ByVal 0)
-    Set d3d11FrameBuffer = Nothing
+    '--- Create Render Target and Depth Buffer
+    pvCreateD3D11RenderTargets m_d3d11Device, m_d3d11SwapChain, m_d3d11FrameBufferView, m_depthBufferView
     
     '--- Create Vertex Shader
     Dim shaderCompileErrorsBlob As ID3DBlob
     Dim errorString     As String
-    hResult = D3DCompileFromFile(PathCombine(App.Path, "shaders.hlsl"), ByVal 0, ByVal 0, "vs_main", "vs_5_0", 0, 0, m_vsBlob, shaderCompileErrorsBlob)
+    Dim shaderCompileFlags As Long
+    '--- Compiling with this flag allows debugging shaders with Visual Studio
+    #If DebugBuild Then
+        shaderCompileFlags = shaderCompileFlags Or D3DCOMPILE_DEBUG
+    #End If
+    hResult = D3DCompileFromFile(PathCombine(App.Path, "shaders.hlsl"), ByVal 0, ByVal 0, "vs_main", "vs_5_0", shaderCompileFlags, 0, m_vsBlob, shaderCompileErrorsBlob)
     If hResult < 0 Then
         If hResult = LNG_FACILITY_WIN32 Or ERROR_FILE_NOT_FOUND Then
             errorString = "Could not compile shader; file not found"
@@ -242,7 +222,7 @@ Private Sub Form_Load()
     
     '--- Create Pixel Shader
     Dim psBlob As ID3DBlob
-    hResult = D3DCompileFromFile(PathCombine(App.Path, "shaders.hlsl"), ByVal 0, ByVal 0, "ps_main", "ps_5_0", 0, 0, psBlob, shaderCompileErrorsBlob)
+    hResult = D3DCompileFromFile(PathCombine(App.Path, "shaders.hlsl"), ByVal 0, ByVal 0, "ps_main", "ps_5_0", shaderCompileFlags, 0, psBlob, shaderCompileErrorsBlob)
     If hResult < 0 Then
         If hResult = LNG_FACILITY_WIN32 Or ERROR_FILE_NOT_FOUND Then
             errorString = "Could not compile shader; file not found"
@@ -257,24 +237,40 @@ Private Sub Form_Load()
     Set psBlob = Nothing
     
     '--- Create Input Layout
-    Dim inputElementDesc(0 To 1)  As D3D11_INPUT_ELEMENT_DESC
-    Dim nameBuffer(0 To 1) As UcsBuffer
-    pvInitInputElementDesc inputElementDesc(0), nameBuffer(0), "POS", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0
-    pvInitInputElementDesc inputElementDesc(1), nameBuffer(1), "TEX", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0
+    Dim inputElementDesc(0 To 0)  As D3D11_INPUT_ELEMENT_DESC
+    Dim nameBuffer(0 To 0) As UcsBuffer
+    pvInitInputElementDesc inputElementDesc(0), nameBuffer(0), "POS", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0
     Set m_inputLayout = m_d3d11Device.CreateInputLayout(inputElementDesc(0), UBound(inputElementDesc) + 1, m_vsBlob.GetBufferPointer(), m_vsBlob.GetBufferSize())
     
-    '--- Create Vertex Buffer
-    Dim vertexData() As Single '--- x, y, u, v
+    '--- Create Vertex and Index Buffer
+    Dim vertexData() As Single '--- x, y, z
     pvArraySingle vertexData, _
-        -0.5!, 0.5!, 0!, 0!, _
-        0.5!, -0.5!, 1!, 1!, _
-        -0.5!, -0.5!, 0!, 1!, _
-        -0.5!, 0.5!, 0!, 0!, _
-        0.5!, 0.5!, 1!, 0!, _
-        0.5!, -0.5!, 1!, 1!
-    m_stride = 4 * sizeof_Single
-    m_numVerts = (UBound(vertexData) + 1) * sizeof_Single / m_stride
+        -0.5!, -0.5!, -0.5!, _
+        -0.5!, -0.5!, 0.5!, _
+        -0.5!, 0.5!, -0.5!, _
+        -0.5!, 0.5!, 0.5!, _
+        0.5!, -0.5!, -0.5!, _
+        0.5!, -0.5!, 0.5!, _
+        0.5!, 0.5!, -0.5!, _
+        0.5!, 0.5!, 0.5!
+    Dim indices() As Integer
+    pvArrayInteger indices, _
+        0, 6, 4, _
+        0, 2, 6, _
+        0, 3, 2, _
+        0, 1, 3, _
+        2, 7, 6, _
+        2, 3, 7, _
+        4, 6, 7, _
+        4, 7, 5, _
+        0, 4, 5, _
+        0, 5, 1, _
+        1, 5, 7, _
+        1, 7, 3
+    m_stride = 3 * sizeof_Single
+'    m_numVerts = (UBound(vertexData) + 1) * sizeof_Single / m_stride
     m_offset = 0
+    m_numIndices = UBound(indices) + 1
     Dim vertexBufferDesc As D3D11_BUFFER_DESC
     With vertexBufferDesc
         .ByteWidth = (UBound(vertexData) + 1) * sizeof_Single
@@ -285,54 +281,15 @@ Private Sub Form_Load()
     vertexSubresourceData.pSysMem = VarPtr(vertexData(0))
     Set m_vertexBuffer = m_d3d11Device.CreateBuffer(vertexBufferDesc, vertexSubresourceData)
     
-    '--- Create Sampler State
-    Dim samplerDesc As D3D11_SAMPLER_DESC
-    With samplerDesc
-        .Filter = D3D11_FILTER_MIN_MAG_MIP_POINT
-        .AddressU = D3D11_TEXTURE_ADDRESS_BORDER
-        .AddressV = D3D11_TEXTURE_ADDRESS_BORDER
-        .AddressW = D3D11_TEXTURE_ADDRESS_BORDER
-        .BorderColor(0) = 1!
-        .BorderColor(1) = 1!
-        .BorderColor(2) = 1!
-        .BorderColor(3) = 1!
-        .ComparisonFunc = D3D11_COMPARISON_NEVER
-    End With
-    Set m_samplerState = m_d3d11Device.CreateSamplerState(samplerDesc)
-    
-    '--- Load Image
-    Dim texWidth         As Long
-    Dim texHeight        As Long
-    Dim texNumChannels   As Long
-    Dim testTextureBytes() As Byte
-    Dim texBytesPerRow   As Long
-    If Not pvLoadPng(PathCombine(App.Path, "testTexture.png"), texWidth, texHeight, texNumChannels, testTextureBytes) Then
-        MsgBox "Error loading testTexture.png", vbExclamation, "Load Image"
-        Unload Me
-        GoTo QH
-    End If
-    texBytesPerRow = texWidth * texNumChannels
-    
-    '--- Create Texture
-    Dim textureDesc     As D3D11_TEXTURE2D_DESC
-    Dim textureSubresourceData As D3D11_SUBRESOURCE_DATA
-    Dim texture         As ID3D11Texture2D
-    With textureDesc
-        .Width = texWidth
-        .Height = texHeight
-        .MipLevels = 1
-        .ArraySize = 1
-        .Format = DXGI_FORMAT_B8G8R8A8_UNORM_SRGB
-        .SampleDesc.Count = 1
+    Dim indexBufferDesc  As D3D11_BUFFER_DESC
+    With indexBufferDesc
+        .ByteWidth = (UBound(indices) + 1) * sizeof_Integer
         .Usage = D3D11_USAGE_IMMUTABLE
-        .BindFlags = D3D11_BIND_SHADER_RESOURCE
+        .BindFlags = D3D11_BIND_INDEX_BUFFER
     End With
-    With textureSubresourceData
-        .pSysMem = VarPtr(testTextureBytes(0))
-        .SysMemPitch = texBytesPerRow
-    End With
-    Set texture = m_d3d11Device.CreateTexture2D(textureDesc, textureSubresourceData)
-    Set m_textureView = m_d3d11Device.CreateShaderResourceView(texture, ByVal 0)
+    Dim indexSubresourceData As D3D11_SUBRESOURCE_DATA
+    indexSubresourceData.pSysMem = VarPtr(indices(0))
+    Set m_indexBuffer = m_d3d11Device.CreateBuffer(indexBufferDesc, indexSubresourceData)
     
     '--- Create Constant Buffer
     Dim constantBufferDesc As D3D11_BUFFER_DESC
@@ -352,8 +309,15 @@ Private Sub Form_Load()
     End With
     Set m_rasterizerState = m_d3d11Device.CreateRasterizerState(rasterizerDesc)
     
+    Dim depthStencilDesc  As D3D11_DEPTH_STENCIL_DESC
+    With depthStencilDesc
+        .DepthEnable = 1
+        .DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL
+        .DepthFunc = D3D11_COMPARISON_LESS
+    End With
+    Set m_depthStencilState = m_d3d11Device.CreateDepthStencilState(depthStencilDesc)
+    
     '--- Camera
-    Dim perspectiveMat As XMMATRIX
     m_cameraPos = XmMake3(0, 0, 2)
     m_cameraFwd = XmMake3(0, 0, -1)
     m_cameraPitch = 0!
@@ -386,12 +350,9 @@ Private Sub Form_Load()
             m_d3d11DeviceContext.OMSetRenderTargets 0, Nothing, Nothing
             Set m_d3d11FrameBufferView = Nothing
             m_d3d11SwapChain.ResizeBuffers 0, 0, 0, DXGI_FORMAT_UNKNOWN, 0
-            Call IIDFromString(szIID_ID3D11Texture2D, aGUID(0))
-            Set d3d11FrameBuffer = m_d3d11SwapChain.GetBuffer(0, aGUID(0))
-            Set m_d3d11FrameBufferView = m_d3d11Device.CreateRenderTargetView(d3d11FrameBuffer, ByVal 0)
-            Set d3d11FrameBuffer = Nothing
             
-            perspectiveMat = XmMakePerspectiveMat(windowAspectRatio, DegreesToRadians(84), 0.1!, 1000!)
+            pvCreateD3D11RenderTargets m_d3d11Device, m_d3d11SwapChain, m_d3d11FrameBufferView, m_depthBufferView
+            m_perspectiveMat = XmMakePerspectiveMat(windowAspectRatio, DegreesToRadians(84), 0.1!, 1000!)
             
             m_windowDidResize = False
         End If
@@ -472,16 +433,18 @@ Private Sub Form_Load()
         '--- Update the forward vector we use for camera movement:
         m_cameraFwd = XmMake3(viewMat.m(0, 2), viewMat.m(1, 2), -viewMat.m(2, 2))
 
-        '--- Spin the quad
+        '--- Spin the cube
         Dim modelMat As XMMATRIX
-        modelMat = XmRotateYMat(0.2! * (M_PI * m_currentTimeInSeconds))
+        modelMat = XmMulMat( _
+            XmRotateXMat(-0.2! * (M_PI * m_currentTimeInSeconds)), _
+            XmRotateYMat(0.1! * (M_PI * m_currentTimeInSeconds)))
         
         '--- Calculate model-view-projection matrix to send to shader
         Dim modelViewProj As XMMATRIX
         modelViewProj = XmMulMat(XmMulMat( _
             modelMat, _
             viewMat), _
-            perspectiveMat)
+            m_perspectiveMat)
         
         '--- Update constant buffer
         Dim mappedSubresource As D3D11_MAPPED_SUBRESOURCE
@@ -494,13 +457,15 @@ Private Sub Form_Load()
         Dim backgroundColor() As Single
         pvArraySingle backgroundColor, 0.1!, 0.2!, 0.6!, 1!
         m_d3d11DeviceContext.ClearRenderTargetView m_d3d11FrameBufferView, backgroundColor(0)
+        m_d3d11DeviceContext.ClearDepthStencilView m_depthBufferView, D3D11_CLEAR_DEPTH, 1!, 0
         
         Dim viewport As D3D11_VIEWPORT
         pvInitViewport viewport, 0, 0, windowWidth, windowHeight, 0, 1
         m_d3d11DeviceContext.RSSetViewports 1, viewport
         m_d3d11DeviceContext.RSSetState m_rasterizerState
         
-        m_d3d11DeviceContext.OMSetRenderTargets 1, m_d3d11FrameBufferView, Nothing
+        m_d3d11DeviceContext.OMSetDepthStencilState m_depthStencilState, 0
+        m_d3d11DeviceContext.OMSetRenderTargets 1, m_d3d11FrameBufferView, m_depthBufferView
         
         m_d3d11DeviceContext.IASetPrimitiveTopology D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST
         m_d3d11DeviceContext.IASetInputLayout m_inputLayout
@@ -514,8 +479,9 @@ Private Sub Form_Load()
         m_d3d11DeviceContext.VSSetConstantBuffers 0, 1, m_constantBuffer
         
         m_d3d11DeviceContext.IASetVertexBuffers 0, 1, m_vertexBuffer, m_stride, m_offset
+        m_d3d11DeviceContext.IASetIndexBuffer m_indexBuffer, DXGI_FORMAT_R16_UINT, 0
 
-        m_d3d11DeviceContext.Draw m_numVerts, 0
+        m_d3d11DeviceContext.DrawIndexed m_numIndices, 0, 0
         
         m_d3d11SwapChain.Present 1, 0
         
@@ -548,6 +514,15 @@ Private Sub pvArrayLong(aDest() As Long, ParamArray a() As Variant)
     Dim lIdx            As Long
     
     ReDim aDest(0 To UBound(a)) As Long
+    For lIdx = 0 To UBound(a)
+        aDest(lIdx) = a(lIdx)
+    Next
+End Sub
+
+Private Sub pvArrayInteger(aDest() As Integer, ParamArray a() As Variant)
+    Dim lIdx            As Long
+    
+    ReDim aDest(0 To UBound(a)) As Integer
     For lIdx = 0 To UBound(a)
         aDest(lIdx) = a(lIdx)
     Next
