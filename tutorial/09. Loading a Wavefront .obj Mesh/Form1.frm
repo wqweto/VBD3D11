@@ -263,14 +263,14 @@ Private Sub pvMainLoop()
     '--- Create Vertex and Index Buffer
     Dim obj As UcsLoadedObjType
     obj = LoadObj(PathCombine(App.Path, "cube.obj"))
-    m_stride = Len(obj.vertexBuffer(0))
+    m_stride = sizeof_UcsVertexDataType
     'm_numVerts = obj.numVertexes
     m_offset = 0
     m_numIndices = obj.numIndices
     
     Dim vertexBufferDesc As D3D11_BUFFER_DESC
     With vertexBufferDesc
-        .ByteWidth = obj.numVertexes * Len(obj.vertexBuffer(0))
+        .ByteWidth = obj.numVertexes * sizeof_UcsVertexDataType
         .Usage = D3D11_USAGE_IMMUTABLE
         .BindFlags = D3D11_BIND_VERTEX_BUFFER
     End With

@@ -4,10 +4,11 @@ Option Explicit
 Private Const EPSILON           As Single = 0.0001
 
 Public Type UcsVertexDataType
-    pos(0 To 3)         As Single
+    pos(0 To 2)         As Single
     uv(0 To 1)          As Single
-    norm(0 To 3)        As Single
+    norm(0 To 2)        As Single
 End Type
+Public Const sizeof_UcsVertexDataType As Long = (3 + 2 + 3) * 4
 
 Public Type UcsLoadedObjType
     numVertexes         As Long
