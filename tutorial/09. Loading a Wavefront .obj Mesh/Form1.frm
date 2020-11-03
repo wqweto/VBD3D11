@@ -135,13 +135,11 @@ Private Sub pvCreateD3D11RenderTargets( _
             swapChain As IDXGISwapChain1, _
             d3d11FrameBufferView As ID3D11RenderTargetView, _
             depthBufferView As ID3D11DepthStencilView)
-    Dim aGUID(0 To 4)   As Long
     Dim d3d11FrameBuffer As ID3D11Texture2D
     Dim depthBufferDesc As D3D11_TEXTURE2D_DESC
     Dim depthBuffer     As ID3D11Texture2D
     
-    Call IIDFromString(szIID_ID3D11Texture2D, aGUID(0))
-    Set d3d11FrameBuffer = swapChain.GetBuffer(0, aGUID(0))
+    Set d3d11FrameBuffer = swapChain.GetBuffer(0, IIDFromString(szIID_ID3D11Texture2D))
     Set d3d11FrameBufferView = m_d3d11Device.CreateRenderTargetView(d3d11FrameBuffer, ByVal 0)
     d3d11FrameBuffer.GetDesc depthBufferDesc
     Set d3d11FrameBuffer = Nothing
@@ -154,7 +152,6 @@ End Sub
 
 Private Sub pvMainLoop()
     Dim hResult         As VBHRESULT
-    Dim aGUID(0 To 3)   As Long
     
     '--- Create D3D11 Device and Context
     Dim featureLevels() As Long
@@ -201,8 +198,7 @@ RetryCreateDevice:
     Set dxgiDevice = Nothing
     dxgiAdapter.GetDesc adapterDesc
     Debug.Print "Graphics Device: " & Replace(adapterDesc.Description, vbNullChar, vbNullString)
-    Call IIDFromString(szIID_IDXGIFactory2, aGUID(0))
-    Set dxgiFactory = dxgiAdapter.GetParent(aGUID(0))
+    Set dxgiFactory = dxgiAdapter.GetParent(IIDFromString(szIID_IDXGIFactory2))
     With d3d11SwapChainDesc
         .Width = 0 '--- use window width
         .Height = 0 '--- use window height

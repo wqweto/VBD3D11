@@ -158,7 +158,6 @@ End Function
 
 Private Sub Form_Load()
     Dim hResult         As VBHRESULT
-    Dim aGUID(0 To 3)   As Long
     
     '--- Create D3D11 Device and Context
     Dim featureLevels() As Long
@@ -205,8 +204,7 @@ RetryCreateDevice:
     Set dxgiDevice = Nothing
     dxgiAdapter.GetDesc adapterDesc
     Debug.Print "Graphics Device: " & Replace(adapterDesc.Description, vbNullChar, vbNullString)
-    Call IIDFromString(szIID_IDXGIFactory2, aGUID(0))
-    Set dxgiFactory = dxgiAdapter.GetParent(aGUID(0))
+    Set dxgiFactory = dxgiAdapter.GetParent(IIDFromString(szIID_IDXGIFactory2))
     With d3d11SwapChainDesc
         .Width = 0 '--- use window width
         .Height = 0 '--- use window height
@@ -224,8 +222,7 @@ RetryCreateDevice:
 
     '--- Create Framebuffer Render Target
     Dim d3d11FrameBuffer As ID3D11Texture2D
-    Call IIDFromString(szIID_ID3D11Texture2D, aGUID(0))
-    Set d3d11FrameBuffer = m_d3d11SwapChain.GetBuffer(0, aGUID(0))
+    Set d3d11FrameBuffer = m_d3d11SwapChain.GetBuffer(0, IIDFromString(szIID_ID3D11Texture2D))
     Set m_d3d11FrameBufferView = m_d3d11Device.CreateRenderTargetView(d3d11FrameBuffer, ByVal 0)
     Set d3d11FrameBuffer = Nothing
     
@@ -396,8 +393,7 @@ RetryCreateDevice:
             m_d3d11DeviceContext.OMSetRenderTargets 0, Nothing, Nothing
             Set m_d3d11FrameBufferView = Nothing
             m_d3d11SwapChain.ResizeBuffers 0, 0, 0, DXGI_FORMAT_UNKNOWN, 0
-            Call IIDFromString(szIID_ID3D11Texture2D, aGUID(0))
-            Set d3d11FrameBuffer = m_d3d11SwapChain.GetBuffer(0, aGUID(0))
+            Set d3d11FrameBuffer = m_d3d11SwapChain.GetBuffer(0, IIDFromString(szIID_ID3D11Texture2D))
             Set m_d3d11FrameBufferView = m_d3d11Device.CreateRenderTargetView(d3d11FrameBuffer, ByVal 0)
             Set d3d11FrameBuffer = Nothing
             

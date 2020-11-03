@@ -67,8 +67,6 @@ library VBD3D11
     typedef long HMONITOR;
     typedef long UINT;
     typedef long DWORD;
-    typedef void *REFGUID;
-    typedef void *REFIID;
     typedef short WCHAR;
     typedef long SIZE_T;
     typedef long BOOL;
@@ -224,6 +222,17 @@ library VBD3D11
     } LARGE_INTEGER;
     
     typedef LARGE_INTEGER UINT64;
+    
+    typedef [uuid(654ade19-99a7-49ff-ba82-dded6e15f9a3)]
+    struct {
+        long    Data1;
+        short   Data2;
+        short   Data3;
+        BYTE    Data4[8];
+    } VBGUID;
+
+    typedef VBGUID *REFGUID;
+    typedef VBGUID *REFIID;
     
 //**********************************************************************
 //
@@ -2735,6 +2744,6 @@ library VBD3D11
         [entry("IIDFromString")]
         HRESULT IIDFromString (
                         [in] BSTR lpszGUID, 
-                        [in, out] void *pGUID);
+                        [out, retval] VBGUID *pGUID);
     }
 };
