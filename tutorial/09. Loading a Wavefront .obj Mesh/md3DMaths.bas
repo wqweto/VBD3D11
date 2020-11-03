@@ -16,8 +16,8 @@ Public Function XmMake3(ByVal x As Single, ByVal y As Single, ByVal z As Single)
     End With
 End Function
 
-Public Function XmLength(uV As XMFLOAT3) As Single
-    With uV
+Public Function XmLength(uA As XMFLOAT3) As Single
+    With uA
         XmLength = Sqr(.x * .x + .y * .y + .z * .z)
     End With
 End Function
@@ -28,16 +28,16 @@ Public Function XmDot(uA As XMFLOAT4, uB As XMFLOAT4) As Single
     End With
 End Function
 
-Public Function XmScalarMul(uV As XMFLOAT3, ByVal sngF As Single) As XMFLOAT3
-    With uV
+Public Function XmScalarMul(uA As XMFLOAT3, ByVal sngF As Single) As XMFLOAT3
+    With uA
         XmScalarMul.x = .x * sngF
         XmScalarMul.y = .y * sngF
         XmScalarMul.z = .z * sngF
     End With
 End Function
 
-Public Function XmNormalize(uV As XMFLOAT3) As XMFLOAT3
-    XmNormalize = XmScalarMul(uV, 1! / XmLength(uV))
+Public Function XmNormalize(uA As XMFLOAT3) As XMFLOAT3
+    XmNormalize = XmScalarMul(uA, 1! / XmLength(uA))
 End Function
 
 Public Function XmCross(uA As XMFLOAT3, uB As XMFLOAT3) As XMFLOAT3

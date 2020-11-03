@@ -25,41 +25,41 @@ Public Function XmMake4(ByVal x As Single, ByVal y As Single, ByVal z As Single,
     End With
 End Function
 
-Public Function XmLength(uV As XMFLOAT3) As Single
-    With uV
+Public Function XmLength(uA As XMFLOAT3) As Single
+    With uA
         XmLength = Sqr(.x * .x + .y * .y + .z * .z)
     End With
 End Function
 
-Public Function XmScalarMul(uV As XMFLOAT3, ByVal sngF As Single) As XMFLOAT3
+Public Function XmScalarMul(uA As XMFLOAT3, ByVal sngF As Single) As XMFLOAT3
     With XmScalarMul
-        .x = uV.x * sngF
-        .y = uV.y * sngF
-        .z = uV.z * sngF
+        .x = uA.x * sngF
+        .y = uA.y * sngF
+        .z = uA.z * sngF
     End With
 End Function
 
-Public Function XmNormalize(uV As XMFLOAT3) As XMFLOAT3
-    XmNormalize = XmScalarMul(uV, 1! / XmLength(uV))
+Public Function XmNormalize(uA As XMFLOAT3) As XMFLOAT3
+    XmNormalize = XmScalarMul(uA, 1! / XmLength(uA))
 End Function
 
-Public Function XmLength4(uV As XMFLOAT4) As Single
-    With uV
+Public Function XmLength4(uA As XMFLOAT4) As Single
+    With uA
         XmLength4 = Sqr(.x * .x + .y * .y + .z * .z + .w * .w)
     End With
 End Function
 
-Public Function XmScalarMul4(uV As XMFLOAT4, ByVal sngF As Single) As XMFLOAT4
+Public Function XmScalarMul4(uA As XMFLOAT4, ByVal sngF As Single) As XMFLOAT4
     With XmScalarMul4
-        .x = uV.x * sngF
-        .y = uV.y * sngF
-        .z = uV.z * sngF
-        .w = uV.w * sngF
+        .x = uA.x * sngF
+        .y = uA.y * sngF
+        .z = uA.z * sngF
+        .w = uA.w * sngF
     End With
 End Function
 
-Public Function XmNormalize4(uV As XMFLOAT4) As XMFLOAT4
-    XmNormalize4 = XmScalarMul4(uV, 1! / XmLength4(uV))
+Public Function XmNormalize4(uA As XMFLOAT4) As XMFLOAT4
+    XmNormalize4 = XmScalarMul4(uA, 1! / XmLength4(uA))
 End Function
 
 Public Function XmDot(uA As XMFLOAT4, uB As XMFLOAT4) As Single
