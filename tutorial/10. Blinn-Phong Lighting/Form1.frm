@@ -17,6 +17,7 @@ Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Option Explicit
 DefObj A-Z
+Private Const MODULE_NAME As String = "Form1"
 
 #Const DebugBuild = True
 
@@ -126,10 +127,25 @@ End Type
 Private Const sizeof_UcsBlinnPhongPSConstants = (8 + 16) * sizeof_Single
 
 '=========================================================================
+' Error handling
+'=========================================================================
+
+Private Sub RaiseError(sFunction As String)
+    Err.Raise Err.Number, Err.Source & vbCrLf & MODULE_NAME & "." & sFunction & "(" & Erl & ")", Err.Description
+End Sub
+
+Private Sub ShowError(sFunction As String)
+    MsgBox Err.Description & vbCrLf & vbCrLf & "Call-stack: " & Err.Source & vbCrLf & MODULE_NAME & "." & sFunction & "(" & Erl & ")", vbCritical
+End Sub
+
+'=========================================================================
 ' Methods
 '=========================================================================
 
 Private Sub pvHandleKey(KeyCode As Integer, Shift As Integer, ByVal bDown As Boolean)
+    Const FUNC_NAME     As String = "pvHandleKey"
+    
+    On Error GoTo EH
     #If Shift Then
     #End If
     Select Case KeyCode
@@ -156,6 +172,9 @@ Private Sub pvHandleKey(KeyCode As Integer, Shift As Integer, ByVal bDown As Boo
     Case vbKeyRight
         m_keyIsDown(GameActionTurnCamRight) = bDown
     End Select
+    Exit Sub
+EH:
+    RaiseError FUNC_NAME
 End Sub
 
 Private Sub pvCreateD3D11RenderTargets( _
@@ -163,6 +182,9 @@ Private Sub pvCreateD3D11RenderTargets( _
             swapChain As IDXGISwapChain1, _
             d3d11FrameBufferView As ID3D11RenderTargetView, _
             depthBufferView As ID3D11DepthStencilView)
+    Const FUNC_NAME     As String = "pvCreateD3D11RenderTargets"
+    
+    On Error GoTo EH
     Dim aGUID(0 To 4)   As Long
     Dim d3d11FrameBuffer As ID3D11Texture2D
     Dim depthBufferDesc As D3D11_TEXTURE2D_DESC
@@ -178,13 +200,18 @@ Private Sub pvCreateD3D11RenderTargets( _
     depthBufferDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL
     Set depthBuffer = d3d11Device.CreateTexture2D(depthBufferDesc, ByVal 0)
     Set depthBufferView = d3d11Device.CreateDepthStencilView(depthBuffer, ByVal 0)
+    Exit Sub
+EH:
+    RaiseError FUNC_NAME
 End Sub
 
 Private Sub pvMainLoop()
+    Const FUNC_NAME     As String = "pvMainLoop"
     Dim hResult         As VBHRESULT
     Dim aGUID(0 To 3)   As Long
     Dim lIdx            As Long
     
+    On Error GoTo EH
     '--- Create D3D11 Device and Context
     Dim featureLevels() As Long
     Dim creationFlags   As Long
@@ -729,6 +756,9 @@ RetryCreateDevice:
         DoEvents
     Loop
 QH:
+    Exit Sub
+EH:
+    RaiseError FUNC_NAME
 End Sub
 
 '=========================================================================
@@ -802,7 +832,13 @@ End Property
 '=========================================================================
 
 Private Sub Form_Load()
+    Const FUNC_NAME     As String = "Form_Load"
+    
+    On Error GoTo EH
     pvMainLoop
+    Exit Sub
+EH:
+    ShowError FUNC_NAME
 End Sub
 
 Private Sub Form_QueryUnload(Cancel As Integer, UnloadMode As Integer)
@@ -814,9 +850,21 @@ Private Sub Form_Resize()
 End Sub
 
 Private Sub Form_KeyDown(KeyCode As Integer, Shift As Integer)
+    Const FUNC_NAME     As String = "Form_KeyUp"
+        
+    On Error GoTo EH
     pvHandleKey KeyCode, Shift, True
+    Exit Sub
+EH:
+    ShowError FUNC_NAME
 End Sub
 
 Private Sub Form_KeyUp(KeyCode As Integer, Shift As Integer)
+    Const FUNC_NAME     As String = "Form_KeyUp"
+    
+    On Error GoTo EH
     pvHandleKey KeyCode, Shift, False
+    Exit Sub
+EH:
+    ShowError FUNC_NAME
 End Sub
