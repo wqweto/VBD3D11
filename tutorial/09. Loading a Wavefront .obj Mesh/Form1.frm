@@ -159,14 +159,19 @@ Private Sub pvMainLoop()
     '--- Create D3D11 Device and Context
     Dim featureLevels() As Long
     Dim creationFlags   As Long
-    pvArrayLong featureLevels, D3D_FEATURE_LEVEL_11_0
+    pvArrayLong featureLevels, D3D_FEATURE_LEVEL_11_0, D3D_FEATURE_LEVEL_10_1, D3D_FEATURE_LEVEL_10_0
     creationFlags = D3D11_CREATE_DEVICE_BGRA_SUPPORT
     #If DebugBuild Then
         creationFlags = creationFlags Or D3D11_CREATE_DEVICE_DEBUG
     #End If
+RetryCreateDevice:
     hResult = D3D11CreateDevice(Nothing, D3D_DRIVER_TYPE_HARDWARE, 0, creationFlags, _
                                 featureLevels(0), UBound(featureLevels) + 1, D3D11_SDK_VERSION, _
                                 m_d3d11Device, 0, m_d3d11DeviceContext)
+    If hResult = DXGI_ERROR_SDK_COMPONENT_MISSING And (creationFlags And D3D11_CREATE_DEVICE_DEBUG) <> 0 Then
+        creationFlags = creationFlags And Not D3D11_CREATE_DEVICE_DEBUG
+        GoTo RetryCreateDevice
+    End If
     If hResult < 0 Then
         Err.Raise hResult, "D3D11CreateDevice"
     End If
@@ -224,7 +229,7 @@ Private Sub pvMainLoop()
     #If DebugBuild Then
         shaderCompileFlags = shaderCompileFlags Or D3DCOMPILE_DEBUG
     #End If
-    hResult = D3DCompileFromFile(PathCombine(App.Path, "shaders.hlsl"), ByVal 0, ByVal 0, "vs_main", "vs_5_0", shaderCompileFlags, 0, m_vsBlob, shaderCompileErrorsBlob)
+    hResult = D3DCompileFromFile(PathCombine(App.Path, "shaders.hlsl"), ByVal 0, ByVal 0, "vs_main", "vs_4_0", shaderCompileFlags, 0, m_vsBlob, shaderCompileErrorsBlob)
     If hResult < 0 Then
         If hResult = LNG_FACILITY_WIN32 Or ERROR_FILE_NOT_FOUND Then
             errorString = "Could not compile shader; file not found"
@@ -239,7 +244,7 @@ Private Sub pvMainLoop()
     
     '--- Create Pixel Shader
     Dim psBlob As ID3DBlob
-    hResult = D3DCompileFromFile(PathCombine(App.Path, "shaders.hlsl"), ByVal 0, ByVal 0, "ps_main", "ps_5_0", shaderCompileFlags, 0, psBlob, shaderCompileErrorsBlob)
+    hResult = D3DCompileFromFile(PathCombine(App.Path, "shaders.hlsl"), ByVal 0, ByVal 0, "ps_main", "ps_4_0", shaderCompileFlags, 0, psBlob, shaderCompileErrorsBlob)
     If hResult < 0 Then
         If hResult = LNG_FACILITY_WIN32 Or ERROR_FILE_NOT_FOUND Then
             errorString = "Could not compile shader; file not found"
@@ -370,6 +375,10 @@ Private Sub pvMainLoop()
     m_cameraPitch = 0!
     m_cameraYaw = 0!
     
+    '--- Timing
+    Dim startTime As Double
+    startTime = TimerEx
+    
     '--- Main Loop
     Show
     m_isRunning = True
@@ -377,11 +386,12 @@ Private Sub pvMainLoop()
         Dim dt              As Single
         Dim previousTimeInSeconds As Double
         previousTimeInSeconds = m_currentTimeInSeconds
-        m_currentTimeInSeconds = TimerEx
+        m_currentTimeInSeconds = TimerEx - startTime
         dt = m_currentTimeInSeconds - previousTimeInSeconds
         If dt > 1! / 60! Then
             dt = 1! / 60!
         End If
+        Caption = "[" & Format$(m_currentTimeInSeconds, "0.000") & " - " & Format$(dt, "0.000") & "]"
         
         '--- Get window dimensions
         Dim windowWidth As Long

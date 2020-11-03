@@ -1162,17 +1162,17 @@ library VBD3D11
             [in, out] UINT *pDescriptionLength);
         HRESULT CheckFeatureSupport(
             [in] D3D11_FEATURE Feature,
-            [in] LPVOID pFeatureSupportData,
+            [in] void *pFeatureSupportData,
             [in] UINT FeatureSupportDataSize);
 
         HRESULT GetPrivateData(
             [in] REFGUID guid,
             [in, out] UINT *pDataSize,
-            [in] LPVOID pData);
+            [in] void *pData);
         HRESULT SetPrivateData(
             [in] REFGUID guid,
             [in] UINT DataSize,
-            [in] LPVOID pData);
+            [in] void *pData);
         HRESULT SetPrivateDataInterface(
             [in] REFGUID guid,
             [in] IUnknown *pData);
@@ -1227,11 +1227,11 @@ library VBD3D11
         HRESULT GetPrivateData(
             [in] REFGUID guid,
             [in, out] UINT *pDataSize,
-            [in] LPVOID pData);
+            [in] void *pData);
         HRESULT SetPrivateData(
             [in] REFGUID guid,
             [in] UINT DataSize,
-            [in] LPVOID pData);
+            [in] void *pData);
         HRESULT SetPrivateDataInterface(
             [in] REFGUID guid,
             [in] IUnknown *pData);
@@ -1402,7 +1402,7 @@ library VBD3D11
             [in] ID3D11Resource *pDstResource,
             [in] UINT DstSubresource,
             [in] D3D11_BOX *pDstBox,
-            [in] LPVOID pSrcData,
+            [in] void *pSrcData,
             [in] UINT SrcRowPitch,
             [in] UINT SrcDepthPitch);
         void CopyStructureCount(
@@ -1662,7 +1662,7 @@ library VBD3D11
             [in] ID3D11Resource *pDstResource,
             [in] UINT DstSubresource,	
             [in, out] D3D11_BOX *pDstBox,
-            [in] LPVOID pSrcData,
+            [in] void *pSrcData,
             [in] UINT SrcRowPitch,
             [in] UINT SrcDepthPitch,
             [in] UINT CopyFlags);
@@ -2297,14 +2297,14 @@ library VBD3D11
         HRESULT SetPrivateData(
             [in] REFGUID guid,
             [in] UINT DataSize,
-            [in] LPVOID pData);
+            [in] void *pData);
         HRESULT SetPrivateDataInterface(
             [in] REFGUID guid,
             [in] IUnknown *pUnknown);
         HRESULT GetPrivateData(
             [in] REFGUID guid,
             [in, out] UINT *pDataSize,
-            [in] LPVOID pData);
+            [in] void *pData);
         HRESULT GetParent(
             [in] REFIID riid,
             [out, retval] IUnknown **ppParent);
@@ -2596,7 +2596,7 @@ library VBD3D11
             [in, out] UINT *pMoveRectsBufferSizeRequired);
         VBHRESULT GetFramePointerShape(
             [in] UINT PointerShapeBufferSize,
-            [in] LPVOID pPointerShapeBuffer,
+            [in] void *pPointerShapeBuffer,
             [in, out] UINT *pPointerShapeBufferSizeRequired,
             [in, out] DXGI_OUTDUPL_POINTER_SHAPE_INFO *pPointerShapeInfo);
         HRESULT MapDesktopSurface(
@@ -2702,6 +2702,7 @@ library VBD3D11
         const UINT DXGI_ERROR_NOT_CURRENTLY_AVAILABLE   = 0x887A0022;
         const UINT DXGI_ERROR_ACCESS_LOST               = 0x887A0026;
         const UINT DXGI_ERROR_WAIT_TIMEOUT              = 0x887A0027;
+        const UINT DXGI_ERROR_SDK_COMPONENT_MISSING     = 0x887A002D;
         const UINT WAIT_ABANDONED                       = 0x00000080;
         
         const UINT DXGI_USAGE_SHADER_INPUT              = 0x00000010;
