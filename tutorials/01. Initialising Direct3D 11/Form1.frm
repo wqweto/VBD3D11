@@ -36,14 +36,19 @@ Private Sub Form_Load()
     #If DebugBuild Then
         creationFlags = creationFlags Or D3D11_CREATE_DEVICE_DEBUG
     #End If
+RetryCreateDevice:
     hResult = D3D11CreateDevice(Nothing, D3D_DRIVER_TYPE_HARDWARE, 0, creationFlags, _
                                 featureLevels(0), UBound(featureLevels) + 1, D3D11_SDK_VERSION, _
                                 m_d3d11Device, 0, m_d3d11DeviceContext)
+    If hResult = DXGI_ERROR_SDK_COMPONENT_MISSING And (creationFlags And D3D11_CREATE_DEVICE_DEBUG) <> 0 Then
+        creationFlags = creationFlags And Not D3D11_CREATE_DEVICE_DEBUG
+        GoTo RetryCreateDevice
+    End If
     If hResult < 0 Then
         Err.Raise hResult, "D3D11CreateDevice"
     End If
     
-#If DebugBuild Then
+#If DebugBuild And False Then
     '--- Set up debug layer to break on D3D11 errors
     Dim d3dDebug        As ID3D11Debug
     Dim d3dInfoQueue    As ID3D11InfoQueue

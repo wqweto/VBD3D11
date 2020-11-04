@@ -1,14 +1,14 @@
 VERSION 5.00
 Begin VB.Form Form1 
    Caption         =   "Form1"
-   ClientHeight    =   2316
+   ClientHeight    =   6924
    ClientLeft      =   108
    ClientTop       =   456
-   ClientWidth     =   3624
+   ClientWidth     =   9924
    LinkTopic       =   "Form1"
-   ScaleHeight     =   2316
-   ScaleWidth      =   3624
-   StartUpPosition =   3  'Windows Default
+   ScaleHeight     =   6924
+   ScaleWidth      =   9924
+   StartUpPosition =   1  'CenterOwner
 End
 Attribute VB_Name = "Form1"
 Attribute VB_GlobalNameSpace = False
@@ -25,6 +25,8 @@ Private Const LNG_FACILITY_WIN32                        As Long = &H80070000
 Private Declare Sub CopyMemory Lib "kernel32" Alias "RtlMoveMemory" (Destination As Any, Source As Any, ByVal Length As Long)
 Private Declare Function lstrlen Lib "kernel32" Alias "lstrlenA" (ByVal lpString As Long) As Long
 Private Declare Function GetClientRect Lib "user32" (ByVal hWnd As Long, lpRect As D3D11_RECT) As Long
+Private Declare Function QueryPerformanceCounter Lib "kernel32" (lpPerformanceCount As Currency) As Long
+Private Declare Function QueryPerformanceFrequency Lib "kernel32" (lpFrequency As Currency) As Long
 
 Private m_d3d11Device           As ID3D11Device1
 Private m_d3d11DeviceContext    As ID3D11DeviceContext1
@@ -47,10 +49,9 @@ Private Type UcsBuffer
 End Type
 
 Private Type UcsConstants
-    pos(0 To 1)         As Single
-    paddingUnused0      As Single
-    paddingUnused1      As Single ' color (below) needs to be 16-byte aligned!
-    color(0 To 3)       As Single
+    pos                 As XMFLOAT2
+    paddingUnused       As XMFLOAT2 ' color (below) needs to be 16-byte aligned!
+    color               As XMFLOAT4
 End Type
 Private Const sizeof_UcsConstants As Long = 32
 
@@ -65,14 +66,19 @@ Private Sub Form_Load()
     #If DebugBuild Then
         creationFlags = creationFlags Or D3D11_CREATE_DEVICE_DEBUG
     #End If
+RetryCreateDevice:
     hResult = D3D11CreateDevice(Nothing, D3D_DRIVER_TYPE_HARDWARE, 0, creationFlags, _
                                 featureLevels(0), UBound(featureLevels) + 1, D3D11_SDK_VERSION, _
                                 m_d3d11Device, 0, m_d3d11DeviceContext)
+    If hResult = DXGI_ERROR_SDK_COMPONENT_MISSING And (creationFlags And D3D11_CREATE_DEVICE_DEBUG) <> 0 Then
+        creationFlags = creationFlags And Not D3D11_CREATE_DEVICE_DEBUG
+        GoTo RetryCreateDevice
+    End If
     If hResult < 0 Then
         Err.Raise hResult, "D3D11CreateDevice"
     End If
     
-#If DebugBuild Then
+#If DebugBuild And False Then
     '--- Set up debug layer to break on D3D11 errors
     Dim d3dDebug        As ID3D11Debug
     Dim d3dInfoQueue    As ID3D11InfoQueue
@@ -189,10 +195,22 @@ Private Sub Form_Load()
     End With
     Set m_constantBuffer = m_d3d11Device.CreateBuffer(constantBufferDesc, ByVal 0)
     
+    '--- Timing
+    Dim currentTimeInSeconds As Double
+    
     '--- Main Loop
     Show
     m_isRunning = True
     Do While m_isRunning
+        Dim dt              As Single
+        Dim previousTimeInSeconds As Double
+        previousTimeInSeconds = currentTimeInSeconds
+        currentTimeInSeconds = TimerEx
+        dt = currentTimeInSeconds - previousTimeInSeconds
+        If dt > 1! / 60! Then
+            dt = 1! / 60!
+        End If
+        
         If m_windowDidResize Then
             m_d3d11DeviceContext.OMSetRenderTargets 0, Nothing, Nothing
             Set m_d3d11FrameBufferView = Nothing
@@ -203,15 +221,28 @@ Private Sub Form_Load()
             m_windowDidResize = False
         End If
         
+        '--- Modulate player's y-position
+        Dim playerPos       As XMFLOAT2
+        Const posCycleAmplitude As Single = 0.5!
+        Const posCyclePeriod As Single = 3! '--- in seconds
+        Const posCycleFreq  As Single = 2! * 3.141592! / posCyclePeriod
+        playerPos.y = posCycleAmplitude * Sin(posCycleFreq * currentTimeInSeconds)
+        
+        '--- Cycle player color
+        Dim playerColor     As XMFLOAT4
+        Const colorCyclePeriod As Single = 5!  '--- in seconds
+        Const colorCycleFreq As Single = 2! * 3.141592! / colorCyclePeriod
+        playerColor.x = 0.5! * (Sin(colorCycleFreq * currentTimeInSeconds) + 1!)
+        playerColor.y = 1! - playerColor.x
+        playerColor.z = 0!
+        playerColor.w = 1!
+        
+        '--- Update constant buffer
         Dim mappedSubresource As D3D11_MAPPED_SUBRESOURCE
         m_d3d11DeviceContext.Map m_constantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, mappedSubresource
         Dim constants As UcsConstants
-        constants.pos(0) = 0.25!
-        constants.pos(1) = 0.3!
-        constants.color(0) = 0.7!
-        constants.color(1) = 0.65!
-        constants.color(2) = 0.1!
-        constants.color(3) = 1!
+        constants.pos = playerPos
+        constants.color = playerColor
         Call CopyMemory(ByVal mappedSubresource.pData, constants, sizeof_UcsConstants)
         m_d3d11DeviceContext.Unmap m_constantBuffer, 0
         
@@ -291,6 +322,15 @@ End Function
 Private Function PathCombine(sPath As String, sFile As String) As String
     PathCombine = sPath & IIf(LenB(sPath) <> 0 And Right$(sPath, 1) <> "\" And LenB(sFile) <> 0, "\", vbNullString) & sFile
 End Function
+
+Private Property Get TimerEx() As Double
+    Dim cFreq           As Currency
+    Dim cValue          As Currency
+    
+    Call QueryPerformanceFrequency(cFreq)
+    Call QueryPerformanceCounter(cValue)
+    TimerEx = cValue / cFreq
+End Property
 
 Private Sub Form_QueryUnload(Cancel As Integer, UnloadMode As Integer)
     m_isRunning = False

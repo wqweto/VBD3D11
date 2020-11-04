@@ -179,7 +179,7 @@ RetryCreateDevice:
         Err.Raise hResult, "D3D11CreateDevice"
     End If
     
-#If DebugBuild Then
+#If DebugBuild And False Then
     '--- Set up debug layer to break on D3D11 errors
     Dim d3dDebug        As ID3D11Debug
     Dim d3dInfoQueue    As ID3D11InfoQueue
