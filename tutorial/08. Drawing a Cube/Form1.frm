@@ -513,6 +513,7 @@ RetryCreateDevice:
         DoEvents
     Loop
 QH:
+    Unload Me
 End Sub
 
 '=========================================================================

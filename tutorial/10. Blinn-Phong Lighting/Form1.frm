@@ -752,6 +752,7 @@ RetryCreateDevice:
         DoEvents
     Loop
 QH:
+    Unload Me
     Exit Sub
 EH:
     RaiseError FUNC_NAME

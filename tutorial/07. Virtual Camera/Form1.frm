@@ -528,6 +528,7 @@ RetryCreateDevice:
         DoEvents
     Loop
 QH:
+    Unload Me
 End Sub
 
 Private Sub Form_QueryUnload(Cancel As Integer, UnloadMode As Integer)
